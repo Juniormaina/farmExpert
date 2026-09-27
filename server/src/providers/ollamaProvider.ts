@@ -18,16 +18,28 @@ function buildSystemPrompt(context: GenerationContext): string {
   ].join("\n");
 }
 
+// Ollama lists models with a tag, e.g. "llama3.2:latest" for "llama3.2".
+function isInstalled(installed: string[], model: string): boolean {
+  const wanted = model.includes(":") ? model : `${model}:latest`;
+  return installed.includes(wanted);
+}
+
 export class OllamaProvider implements AIProvider {
   readonly name = "ollama" as const;
+  readonly model = OLLAMA_MODEL;
 
+  // Ollama running is not enough: the configured model must be downloaded too,
+  // otherwise the app would report a local AI that fails on every request.
   async isAvailable(): Promise<boolean> {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
       const res = await fetch(`${OLLAMA_HOST}/api/tags`, { signal: controller.signal });
       clearTimeout(timeout);
-      return res.ok;
+      if (!res.ok) return false;
+      const json = (await res.json()) as { models?: Array<{ name?: string }> };
+      const installed = (json.models ?? []).map((m) => m.name ?? "");
+      return isInstalled(installed, OLLAMA_MODEL);
     } catch {
       return false;
     }

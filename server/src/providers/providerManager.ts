@@ -37,7 +37,9 @@ function describeProvider(name: ProviderName, available: boolean): string {
     return available ? "Hosted model configured and reachable" : "Hosted model not configured (no API key)";
   }
   if (name === "ollama") {
-    return available ? "Local Ollama model reachable" : "Local Ollama not reachable at configured host";
+    return available
+      ? `Local model ${ollama.model} ready (via Ollama)`
+      : `Local model ${ollama.model} not available (start Ollama and run: ollama pull ${ollama.model})`;
   }
   return "Deterministic template fallback always available";
 }
