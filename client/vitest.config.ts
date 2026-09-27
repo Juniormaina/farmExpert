@@ -6,6 +6,13 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: false,
-    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"]
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+    pool: "threads",
+    fileParallelism: false,
+    poolOptions: {
+      threads: {
+        singleThread: true
+      }
+    }
   }
 });

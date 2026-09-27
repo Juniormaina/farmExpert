@@ -10,9 +10,9 @@ export default defineConfig({
       injectRegister: "auto",
       includeAssets: ["favicon-32.png", "apple-touch-icon.png", "icon-192.png", "farmer.jpg"],
       manifest: {
-        name: "ShambaAI",
-        short_name: "ShambaAI",
-        description: "Offline-first agricultural AI agent for Kenyan smallholder farmers",
+        name: "SmartShambaAI",
+        short_name: "SmartShambaAI",
+        description: "SmartShambaAI — offline-first agricultural AI for Kenyan smallholder farmers",
         theme_color: "#2f6f3e",
         background_color: "#f7f3ea",
         display: "standalone",

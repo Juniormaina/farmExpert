@@ -1,13 +1,13 @@
 import type { AIProvider, GenerationContext } from "./types.js";
 
-const OLLAMA_HOST = process.env.OLLAMA_HOST ?? "http://localhost:11434";
+const OLLAMA_HOST = process.env.OLLAMA_HOST || process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "llama3.2";
 const HEALTH_TIMEOUT_MS = 800;
 const GENERATE_TIMEOUT_MS = 8000;
 
 function buildSystemPrompt(context: GenerationContext): string {
   return [
-    "You are ShambaAI, an assistant for Kenyan smallholder farmers.",
+    "You are SmartShambaAI, an assistant for Kenyan smallholder farmers.",
     "You must NOT invent any prices, availability, or numbers.",
     "Below are FACTS already computed by deterministic services. Rephrase them warmly and clearly",
     `in ${context.locale === "sw" ? "Kiswahili" : "English"}, keeping every number and label exactly as given.`,

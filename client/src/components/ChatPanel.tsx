@@ -75,7 +75,7 @@ export function ChatPanel() {
       <div className="chat-topbar">
         <img className="chat-avatar" src="/icon-192.png" alt="" />
         <div className="chat-contact">
-          <strong>ShambaAI</strong>
+          <strong>SmartShambaAI</strong>
           <span className={online ? "presence online" : "presence offline"}>{online ? t.chatOnline : t.chatOffline}</span>
         </div>
         <span className="chat-langs">{t.chatSubtitle}</span>

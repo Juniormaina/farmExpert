@@ -6,8 +6,8 @@ import type { FertilizerListing, FertilizerType, MarketPrice } from "../shared/t
 type SamplePrice = Omit<MarketPrice, "isDemoData" | "source" | "lastUpdated" | "freshness">;
 type SampleListing = Omit<FertilizerListing, "isDemoData" | "isFictionalSupplier" | "source" | "lastUpdated" | "freshness">;
 
-const PRICE_SOURCE = "ShambaAI Demo Dataset (illustrative, modeled on public reporting patterns)";
-const LISTING_SOURCE = "ShambaAI Demo Dataset (fictional listing for demonstration)";
+const PRICE_SOURCE = "SmartShambaAI Demo Dataset (illustrative, modeled on public reporting patterns)";
+const LISTING_SOURCE = "SmartShambaAI Demo Dataset (fictional listing for demonstration)";
 
 const bag90 = { unit: "bag" as const, unitKg: 90 };
 const bag50 = { unit: "bag" as const, unitKg: 50 };

@@ -6,8 +6,8 @@ import { DEMO_DATA_NOTICE } from "../shared/i18n.js";
 const SMS_MAX_LENGTH = 612;
 
 const SMS_DEMO_PREFIX: Record<Locale, string> = {
-  en: "ShambaAI (DEMO DATA, not live prices): ",
-  sw: "ShambaAI (TAARIFA YA MFANO, si bei halisi): "
+  en: "SmartShambaAI (DEMO DATA, not live prices): ",
+  sw: "SmartShambaAI (TAARIFA YA MFANO, si bei halisi): "
 };
 
 export interface SmsMessage {

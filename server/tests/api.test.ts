@@ -9,6 +9,15 @@ beforeAll(() => {
   app = createApp();
 });
 
+describe("GET /", () => {
+  it("points visitors to the web UI instead of a blank error", async () => {
+    const res = await request(app).get("/");
+    expect(res.status).toBe(200);
+    expect(res.text).toContain("http://localhost:5173");
+    expect(res.text).toContain("SmartShambaAI API");
+  });
+});
+
 describe("GET /api/status", () => {
   it("reports deterministic as the active provider when no AI backend is reachable", async () => {
     const res = await request(app).get("/api/status");

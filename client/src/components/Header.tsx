@@ -20,7 +20,7 @@ export function Header() {
         <div className="app-header-top">
           <div className="brand">
             <img src="/icon-192.png" alt="" />
-            <span>ShambaAI</span>
+            <span>SmartShambaAI</span>
           </div>
           <div className="header-controls">
             <button

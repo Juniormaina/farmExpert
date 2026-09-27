@@ -9,8 +9,16 @@ interface HostedConfig {
   style: ApiStyle;
 }
 
+function normalizeChatCompletionsUrl(url: string): string {
+  const trimmed = url.replace(/\/+$/, "");
+  if (trimmed.endsWith("/chat/completions")) return trimmed;
+  if (trimmed.endsWith("/v1")) return `${trimmed}/chat/completions`;
+  return trimmed;
+}
+
 function readConfig(): HostedConfig | null {
-  const apiKey = process.env.HOSTED_AI_API_KEY;
+  // HOSTED_AI_* is the canonical form; MODELSCOPE_* aliases are also accepted.
+  const apiKey = process.env.HOSTED_AI_API_KEY || process.env.MODELSCOPE_API_KEY;
   if (!apiKey) return null;
 
   const style: ApiStyle = process.env.API_STYLE === "openai" ? "openai" : "anthropic";
@@ -22,10 +30,13 @@ function readConfig(): HostedConfig | null {
       ? { baseUrl: "https://integrate.api.nvidia.com/v1/chat/completions", model: "nvidia/nemotron-3-super-120b-a12b" }
       : { baseUrl: "https://api.anthropic.com/v1/messages", model: "claude-sonnet-5" };
 
+  const configuredUrl =
+    process.env.HOSTED_AI_BASE_URL || process.env.MODELSCOPE_BASE_URL || defaults.baseUrl;
+
   return {
     apiKey,
-    baseUrl: process.env.HOSTED_AI_BASE_URL ?? defaults.baseUrl,
-    model: process.env.HOSTED_AI_MODEL ?? defaults.model,
+    baseUrl: resolvedStyle === "openai" ? normalizeChatCompletionsUrl(configuredUrl) : configuredUrl,
+    model: process.env.HOSTED_AI_MODEL || process.env.MODELSCOPE_MODEL || defaults.model,
     style: resolvedStyle
   };
 }
@@ -49,7 +60,7 @@ function readOpenAiText(json: unknown): string | undefined {
 
 function buildPrompt(context: GenerationContext): string {
   return [
-    "You are ShambaAI, an assistant for Kenyan smallholder farmers.",
+    "You are SmartShambaAI, an assistant for Kenyan smallholder farmers.",
     "You must NOT invent any prices, availability, or numbers.",
     "Below are FACTS already computed by deterministic services. Rephrase them warmly and clearly",
     `in ${context.locale === "sw" ? "Kiswahili" : "English"}, keeping every number and label exactly as given.`,

@@ -86,7 +86,7 @@ export async function generateReply(context: GenerationContext): Promise<Generat
       // dropped numbers), so fall through to the next provider rather than fail.
       const reason = err instanceof Error ? err.message : String(err);
       // eslint-disable-next-line no-console
-      console.warn(`[shambaai] ${provider.name} provider rejected, falling back: ${reason}`);
+      console.warn(`[smartshambaai] ${provider.name} provider rejected, falling back: ${reason}`);
       continue;
     }
   }

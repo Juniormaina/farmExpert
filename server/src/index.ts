@@ -1,7 +1,14 @@
-import "dotenv/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import { createApp } from "./api/app.js";
 import { initSchema, isSeeded } from "./database/connection.js";
 import { resetDemoData } from "./database/seed.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Root .env first (shared aliases), then server/.env overrides for this package.
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../.env"), override: true });
 
 initSchema();
 if (!isSeeded()) {
@@ -13,5 +20,5 @@ const app = createApp();
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`ShambaAI server listening on http://localhost:${PORT}`);
+  console.log(`SmartShambaAI server listening on http://localhost:${PORT}`);
 });

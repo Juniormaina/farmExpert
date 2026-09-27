@@ -1,0 +1,32 @@
+# Render Blueprint for SmartShambaAI (single web service: API + UI)
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: smartshambaai
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:web
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SERVE_CLIENT
+        value: "1"
+      - key: SMARTSHAMBAAI_DB_PATH
+        value: /tmp/smartshambaai.db
+      - key: AI_REPLY_BUDGET_MS
+        value: "10000"
+      - key: API_STYLE
+        value: openai
+      # Optional hosted AI — set in the Render dashboard (do not commit secrets):
+      # HOSTED_AI_API_KEY, HOSTED_AI_BASE_URL, HOSTED_AI_MODEL
+      # or MODELSCOPE_API_KEY, MODELSCOPE_BASE_URL, MODELSCOPE_MODEL
+      - key: HOSTED_AI_API_KEY
+        sync: false
+      - key: HOSTED_AI_BASE_URL
+        sync: false
+      - key: HOSTED_AI_MODEL
+        sync: false

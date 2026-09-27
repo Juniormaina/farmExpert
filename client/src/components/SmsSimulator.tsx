@@ -56,7 +56,7 @@ export function SmsSimulator() {
             </svg>
             <img className="sms-avatar" src="/icon-192.png" alt="" />
             <div className="sms-contact">
-              <strong>ShambaAI</strong>
+              <strong>SmartShambaAI</strong>
               <span>{t.smsContactLine}</span>
             </div>
           </div>

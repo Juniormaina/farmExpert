@@ -12,6 +12,13 @@ export default defineConfig({
     globals: false,
     include: ["tests/**/*.test.ts"],
     setupFiles: ["tests/setup-env.ts", "tests/setup-db.ts"],
+    pool: "threads",
+    fileParallelism: false,
+    poolOptions: {
+      threads: {
+        singleThread: true
+      }
+    },
     server: {
       deps: {
         external: [/node:sqlite/, /^sqlite$/]
