@@ -9,6 +9,12 @@ send SMS, or a feature phone that can only dial a USSD menu. It keeps working wh
 internet connection is poor or gone.
 
 <p align="center">
+  <img src="docs/screenshots/desktop.png" alt="ShambaAI on a desktop: chat with highlighted key points beside crop and fertilizer prices" width="92%" />
+</p>
+
+<p align="center"><em>On a phone: dashboard, chat, and the USSD budget menu</em></p>
+
+<p align="center">
   <img src="docs/screenshots/web.png" alt="ShambaAI web dashboard" width="30%" />
   <img src="docs/screenshots/chat.png" alt="Chat answering a Kiswahili question" width="30%" />
   <img src="docs/screenshots/ussd.png" alt="USSD simulator showing a budget plan" width="30%" />
@@ -26,11 +32,13 @@ internet connection is poor or gone.
 - [Running the demo](#running-the-demo)
 - [Features](#features)
 - [How it works](#how-it-works)
+- [Technologies used](#technologies-used)
 - [AI providers](#ai-providers)
 - [Working offline](#working-offline)
 - [Testing](#testing)
 - [API reference](#api-reference)
 - [Project structure](#project-structure)
+- [Deploying](#deploying)
 - [Troubleshooting](#troubleshooting)
 - [Limitations](#limitations)
 
@@ -149,13 +157,24 @@ separate logic per channel apart from the USSD menu steps and the SMS length lim
 
 ### Interactive
 
-- Tap-to-ask suggestion buttons under the chat, in English or Kiswahili.
+- A row of tap-to-ask suggestions above the message box, in English or Kiswahili,
+  starting with Mary's demo question. Swipe it sideways to see more.
 - A "working it out" indicator while an answer is on its way.
-- A **Nakuru / Eldoret** switch for the price cards. Asking about a county in chat
-  switches the cards and the calculator to that county automatically.
+- **Crop** and **County** pickers above the price cards. Asking about a crop or county
+  in chat switches the cards and the budget calculator to match.
 - The budget calculator updates as you type, with a large *Short by* or *Left over*
   figure, a bar showing how much of the cost the budget covers, and the biggest cost
   highlighted.
+
+### Phone and desktop
+
+- **Phones and tablets** get a single column: chat (or the SMS or USSD phone), then the
+  prices, then the budget calculator. On the SMS and USSD tabs a phone shows only the
+  simulator, to keep it uncluttered.
+- **Laptops and desktops** (1024 pixels wide and up) get two columns: the chat or
+  phone simulator on the left and the prices on the right, ending at the same line,
+  with the budget calculator in a full-width row underneath. The whole page scrolls
+  together, and a long conversation scrolls inside the chat box.
 
 ### Language
 
@@ -219,7 +238,7 @@ confirm real rates with a soil test or a local extension officer.
                           |
                     Agent (shared)
          1. detect language and intent
-         2. extract county, acres, budget, fertilizer
+         2. extract crop, county, acres, budget, fertilizer
          3. look up prices           ---> SQLite demo data
          4. calculate the budget     ---> plain arithmetic
          5. build a template reply   (always correct)
@@ -232,7 +251,34 @@ number, answers too slowly, or isn't available, the template reply is sent inste
 farmer always gets correct numbers.
 
 The database is SQLite, stored in a single file at `server/data/shambaai.db` and
-created automatically on first start. No database server or cloud database is needed.
+created and filled with the demo data automatically on first start. No database server
+or cloud database is needed. Set `SHAMBAAI_DB_PATH` to put the file somewhere else. If
+the server can't write to its folder, as on Vercel, it uses the system's temporary
+folder instead.
+
+## Technologies used
+
+| Area | Technology | What it does here |
+|---|---|---|
+| Language | [TypeScript](https://www.typescriptlang.org/) 5.9 | Used for all code, frontend and backend |
+| Runtime | [Node.js](https://nodejs.org/) 22 | Runs the backend. Version 22 or newer is required for its built-in SQLite |
+| Backend | [Express](https://expressjs.com/) 4 | The API that the web app and all three channels call |
+| | [cors](https://www.npmjs.com/package/cors), [dotenv](https://www.npmjs.com/package/dotenv) | Cross-origin requests, and loading settings from `server/.env` |
+| Database | SQLite through Node's built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) | Stores the demo prices, fertilizer listings and the offline request queue in one file, with nothing to install |
+| Frontend | [React](https://react.dev/) 18 | The dashboard, chat, price cards, budget calculator and phone simulators |
+| | [Vite](https://vitejs.dev/) 5 with [@vitejs/plugin-react](https://www.npmjs.com/package/@vitejs/plugin-react) 4 | Dev server and production build. In development it also forwards `/api` calls to the backend |
+| Styling | Plain CSS | No UI framework. Colours are CSS variables, with mobile-first responsive layouts |
+| Offline | [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) 0.20 with [Workbox](https://developer.chrome.com/docs/workbox) 7 | Service worker that saves the app so it reloads without a connection, plus the install-to-home-screen manifest |
+| | Browser `localStorage` | Last-seen prices with their timestamps, and messages waiting to be sent when the connection returns |
+| AI | [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) or any OpenAI-compatible API, such as [NVIDIA NIM](https://build.nvidia.com/) | Optional hosted model that rewords replies |
+| | [Ollama](https://ollama.com/) | Optional local model that works without internet |
+| | Built-in templates | Always-available replies, used whenever no AI is configured or an AI reply fails the price check |
+| Testing | [Vitest](https://vitest.dev/) 2, [Supertest](https://www.npmjs.com/package/supertest) 7, [jsdom](https://github.com/jsdom/jsdom) 25 | Unit and API tests. Supertest calls the Express routes, and jsdom stands in for the browser in frontend tests |
+| Dev tooling | [tsx](https://tsx.is/) 4, npm workspaces | Runs the TypeScript server with auto-reload. One `npm install` sets up both the `server` and `client` packages |
+| Hosting | [Vercel](https://vercel.com/) (config included) or any Node.js host | See [Deploying](#deploying) |
+
+The chat understands **English and Kiswahili** using keyword and pattern rules written
+for this project, so it needs no AI model to work out what a farmer is asking.
 
 ## AI providers
 
@@ -248,6 +294,7 @@ Settings go in `server/.env`. The main ones:
 | Variable | Default | Purpose |
 |---|---|---|
 | `PORT` | `4000` | API port |
+| `SHAMBAAI_DB_PATH` | `server/data/shambaai.db` | Where the SQLite file is kept |
 | `HOSTED_AI_API_KEY` | *(empty)* | Turns on the hosted model |
 | `API_STYLE` | `anthropic` | `anthropic` or `openai` request format |
 | `HOSTED_AI_BASE_URL` | depends on style | API endpoint |
@@ -378,6 +425,49 @@ question-reading code directly (from `server/src/shared`, `server/src/data`,
 own copies. That way the offline answers always match the online ones. None of those
 files touch the database, so no server-only code ends up in the browser.
 
+## Deploying
+
+### On a normal server (most reliable for a live demo)
+
+Any host that runs a long-lived Node.js 22 process works, such as a VPS, Render,
+Railway, or Fly.io:
+
+```bash
+npm install
+npm run build:server && npm run build:client
+npm run --workspace server start      # API on PORT (default 4000)
+```
+
+Serve `client/dist` as static files, and send `/api` requests to the Node process
+(for example with nginx, or your host's routing rules). Keep `server/data/` on
+storage that survives restarts if you want the database file to persist.
+
+### On Vercel
+
+The repository is set up for Vercel with `vercel.json` and an `api/` entry point:
+
+- The build runs `npm run build:server && npm run build:client`.
+- The web app is served from `client/dist`.
+- The whole API runs as one serverless function, `api/[[...path]].ts`, which wraps
+  the same Express app.
+
+In the Vercel project settings, set the Node.js version to 22 or newer, since the
+database needs Node's built-in SQLite. Add your settings, such as `HOSTED_AI_API_KEY`,
+under **Environment Variables**. Never commit `server/.env`. After deploying, open
+`/health` and `/api/status` on your Vercel address to confirm the API is running.
+
+Things to know about Vercel:
+
+- **The database is temporary.** Vercel only allows writing to a temporary folder, so
+  the SQLite file lives there and is rebuilt from the demo data whenever Vercel starts
+  a fresh copy of the function. The demo data is the same every time, so prices always
+  show, but anything saved, such as the offline request queue, can be lost.
+- **SMS history and USSD sessions can reset.** They are kept in memory, and Vercel can
+  send one person's requests to different copies of the function. A USSD menu can
+  occasionally jump back to the start.
+- **For a live presentation**, running on a normal server, or locally, avoids both
+  issues.
+
 ## Troubleshooting
 
 **`ExperimentalWarning: SQLite is an experimental feature`**
@@ -414,8 +504,8 @@ ShambaAI is a hackathon prototype, not a production service.
 - **No login or rate limiting.** Add both before putting it on the public internet,
   especially if a paid AI key is configured.
 - **Open CORS.** The API accepts requests from any website.
-- **Single server.** SQLite is one file on one machine. It works on any host that keeps
-  files between restarts (a VPS, Render, Railway, or Fly.io with a volume), but not on
-  serverless hosts like Vercel, and not across several server copies.
+- **One server's memory.** SQLite is one file on one machine, and SMS history and USSD
+  sessions are kept in the server's memory. That is fine on a single long-running
+  server, but on Vercel they can reset between requests (see [Deploying](#deploying)).
 - **First visit needs a connection.** A browser that has never opened the app online
   has nothing saved to show offline.
