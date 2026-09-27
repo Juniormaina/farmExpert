@@ -16,6 +16,8 @@
   --radius-md: 12px;
   --radius-lg: 20px;
   --shadow-card: 0 2px 10px rgba(44, 40, 32, 0.08);
+  --glass: var(--color-white);
+  --card-glow: 0 1px 2px rgba(29, 69, 39, 0.06), 0 8px 24px rgba(29, 69, 39, 0.1);
   color-scheme: light;
 }
 
@@ -52,6 +54,8 @@ input, select, textarea {
 }
 
 .app-header {
+  position: relative;
+  overflow: hidden;
   background: var(--color-green-800);
   color: var(--color-white);
   padding: 20px 16px 24px;
@@ -62,6 +66,16 @@ input, select, textarea {
 .header-inner {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* Phones: the photo is a clean card of its own inside the banner. It is shown
+   close to its natural size, so it stays sharp, and no text sits on it. */
+.hero-photo {
+  height: 190px;
+  margin-top: 14px;
+  border-radius: var(--radius-md);
+  background: url("/farmer.jpg") center 18% / cover no-repeat;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .layout {
@@ -169,27 +183,79 @@ input, select, textarea {
 
 .channel-tab {
   flex: 1;
-  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-neutral-300);
   background: var(--color-white);
-  font-weight: 600;
   color: var(--color-neutral-700);
-  min-width: 100px;
+  min-width: 96px;
   text-align: center;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.channel-tab:hover:not(.active) {
+  border-color: var(--color-green-500);
 }
 
 .channel-tab.active {
   background: var(--color-green-700);
   color: var(--color-white);
   border-color: var(--color-green-700);
+  box-shadow: 0 6px 16px rgba(47, 111, 62, 0.3);
+}
+
+.tab-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.tab-hint {
+  font-size: 0.72rem;
+  opacity: 0.8;
+  line-height: 1.2;
+}
+
+/* Shared header for the Web, SMS and USSD panels */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.panel-header h2 {
+  margin: 0 0 2px;
+}
+
+.panel-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-neutral-700);
+}
+
+.sim-badge {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-green-900);
+  background: var(--color-maize-500);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: help;
 }
 
 .card {
-  background: var(--color-white);
+  background: var(--glass);
   border-radius: var(--radius-lg);
   padding: 18px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--card-glow);
   margin-bottom: 18px;
 }
 
@@ -341,42 +407,162 @@ input, select, textarea {
   font-weight: 600;
 }
 
-.phone-frame {
-  max-width: 320px;
+/* Phone simulators */
+.phone {
+  width: 100%;
+  max-width: 300px;
   margin: 0 auto;
-  border: 10px solid var(--color-neutral-900);
-  border-radius: 32px;
-  background: var(--color-neutral-900);
-  padding: 10px;
+  padding: 12px;
+  border-radius: 34px;
+  background: #1f1d18;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25), inset 0 0 0 2px #3a372f;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.phone-statusbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 12px 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #cfc6b0;
+  letter-spacing: 0.02em;
 }
 
 .phone-screen {
-  background: var(--color-white);
-  border-radius: 18px;
-  min-height: 420px;
+  background: #f4f1e8;
+  border-radius: 20px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.sms-screen {
+  height: 320px;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  gap: 8px;
 }
 
-.phone-screen-header {
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--color-neutral-700);
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.ussd-menu-text {
-  white-space: pre-wrap;
-  background: var(--color-neutral-900);
-  color: #b6ffcf;
-  font-family: "Courier New", monospace;
-  border-radius: 10px;
-  padding: 14px;
-  flex: 1;
+.sms-bubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 16px;
   font-size: 0.85rem;
-  overflow-y: auto;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.sms-bubble.sent {
+  align-self: flex-end;
+  background: var(--color-green-700);
+  color: var(--color-white);
+  border-bottom-right-radius: 4px;
+}
+
+.sms-bubble.received {
+  align-self: flex-start;
+  background: var(--color-white);
+  color: var(--color-neutral-900);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.phone-empty {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  color: var(--color-neutral-700);
+  font-size: 0.82rem;
+}
+
+.phone-empty p {
+  margin: 0 0 4px;
+}
+
+.phone-input {
+  display: flex;
+  gap: 8px;
+}
+
+.phone-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #f4f1e8;
+}
+
+.phone-input .btn-primary {
+  padding: 10px 16px;
+}
+
+.ussd-screen {
+  height: 210px;
+  background: #0f1a12;
+  border-radius: 16px;
+}
+
+.ussd-text {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #b6ffcf;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.key {
+  height: 42px;
+  border: none;
+  border-radius: 12px;
+  background: #3a372f;
+  color: var(--color-white);
+  font-size: 1.05rem;
+  font-weight: 700;
+  transition: background 0.1s, transform 0.05s;
+}
+
+.key:hover:not(:disabled) {
+  background: #4a463b;
+}
+
+.key:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.key-muted {
+  font-size: 0.8rem;
+  color: #cfc6b0;
+}
+
+.key-send {
+  background: var(--color-green-700);
+  font-size: 0.85rem;
+}
+
+.key-send:hover:not(:disabled) {
+  background: var(--color-green-500);
+}
+
+.key:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.phone-full-button {
+  width: 100%;
 }
 
 .form-grid {
@@ -471,6 +657,15 @@ input, select, textarea {
   margin-top: 2px;
 }
 
+.chat-empty {
+  margin: auto;
+  max-width: 34ch;
+  text-align: center;
+  color: var(--color-neutral-700);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .offline-note {
   font-size: 0.7rem;
   opacity: 0.7;
@@ -517,29 +712,16 @@ input, select, textarea {
 }
 
 /* Suggestion chips */
-/* One row that scrolls sideways at every size, so the suggestions never push
-   the message box down the screen. */
 .suggestions {
   display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   margin-bottom: 10px;
-  padding-bottom: 4px;
 }
 
-.suggestions .chip,
-.suggestions-label {
-  flex-shrink: 0;
-}
-
-.suggestions-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-neutral-700);
-  margin-right: 2px;
+.suggestions .chip {
+  text-align: left;
 }
 
 .chip {
@@ -551,11 +733,6 @@ input, select, textarea {
   font-size: 0.8rem;
   font-weight: 600;
   transition: background 0.15s, color 0.15s;
-}
-
-.chip-featured {
-  background: var(--color-maize-500);
-  border-color: var(--color-maize-700);
 }
 
 .chip:hover:not(:disabled) {
@@ -574,6 +751,10 @@ input, select, textarea {
   flex-direction: column;
   gap: 8px;
   margin-bottom: 14px;
+  padding: 12px 14px;
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-glow);
 }
 
 .filter-row {
@@ -843,6 +1024,7 @@ input, select, textarea {
     --color-neutral-900: #f2ede1;
     --color-neutral-700: #cfc6b0;
     --color-neutral-300: #443f31;
+    --glass: #262319;
     color-scheme: dark;
   }
   body:not([data-theme="light"]) .card,
@@ -854,31 +1036,55 @@ input, select, textarea {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 700px) {
+  /* Wide screens: the photo fills the right side of the banner at close to its
+     natural size, fading into the green at its left edge. The text column is
+     capped so it always ends before the photo begins. */
   .app-header {
+    --hero-photo-width: min(46vw, 640px);
+    display: flex;
+    align-items: center;
+    min-height: 340px;
     border-radius: 0;
-    padding: 24px 16px 28px;
-    margin-bottom: 24px;
+    padding: 36px 16px;
+    margin-bottom: 28px;
   }
 
   .header-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "top top"
-      "tagline status"
-      "subtitle demo";
-    column-gap: 32px;
+    width: 100%;
   }
 
-  .app-header-top { grid-area: top; }
-  .tagline { grid-area: tagline; align-self: end; }
-  .subtitle { grid-area: subtitle; }
-  .status-strip { grid-area: status; justify-content: flex-end; align-self: end; margin: 0; }
-  .demo-bar { grid-area: demo; justify-content: flex-end; align-self: start; margin-top: 8px; }
+  .header-inner > :not(.hero-photo) {
+    position: relative;
+    z-index: 1;
+    max-width: min(600px, calc(100vw - var(--hero-photo-width) - max(16px, 50vw - 600px) - 56px));
+  }
+
+  .hero-photo {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: var(--hero-photo-width);
+    height: auto;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background-position: center 18%;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 26%);
+    mask-image: linear-gradient(to right, transparent 0, #000 26%);
+  }
 
   .tagline {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
+    line-height: 1.2;
+    margin-top: 22px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tagline {
+    font-size: 2.1rem;
   }
 
   .subtitle {

@@ -16,7 +16,7 @@ export function PriceFilters() {
             aria-pressed={crop === c.id}
             onClick={() => setCrop(c.id)}
           >
-            {c.name[locale]}
+            {c.shortName[locale]}
           </button>
         ))}
       </div>

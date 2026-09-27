@@ -7,7 +7,11 @@ const CHANNELS: Channel[] = ["web", "sms", "ussd"];
 export function ChannelSwitcher() {
   const { channel, setChannel, locale } = useAppContext();
   const t = UI_STRINGS[locale];
-  const labels: Record<Channel, string> = { web: t.webTab, sms: t.smsTab, ussd: t.ussdTab };
+  const tabs: Record<Channel, { title: string; hint: string }> = {
+    web: { title: t.webTab, hint: t.webTabHint },
+    sms: { title: t.smsTab, hint: t.smsTabHint },
+    ussd: { title: t.ussdTab, hint: t.ussdTabHint }
+  };
 
   return (
     <nav className="channel-switcher" aria-label="Channel switcher">
@@ -18,7 +22,8 @@ export function ChannelSwitcher() {
           onClick={() => setChannel(c)}
           aria-pressed={channel === c}
         >
-          {labels[c]}
+          <span className="tab-title">{tabs[c].title}</span>
+          <span className="tab-hint">{tabs[c].hint}</span>
         </button>
       ))}
     </nav>

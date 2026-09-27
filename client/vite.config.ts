@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
-      includeAssets: ["favicon-32.png", "apple-touch-icon.png", "icon-192.png"],
+      includeAssets: ["favicon-32.png", "apple-touch-icon.png", "icon-192.png", "farmer.jpg"],
       manifest: {
         name: "ShambaAI",
         short_name: "ShambaAI",

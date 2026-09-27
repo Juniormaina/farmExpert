@@ -19,6 +19,8 @@ export interface CropBudgetDefaults {
 export interface CropInfo {
   id: CropId;
   name: { en: string; sw: string };
+  // Compact label for buttons and pickers where space is tight.
+  shortName: { en: string; sw: string };
   // Lowercase words or phrases a farmer might use, in English or Kiswahili.
   aliases: string[];
   seedLabel: { en: string; sw: string };
@@ -33,6 +35,7 @@ export const CROPS: CropInfo[] = [
   {
     id: "maize",
     name: { en: "Maize", sw: "Mahindi" },
+    shortName: { en: "Maize", sw: "Mahindi" },
     aliases: ["maize", "corn", "mahindi"],
     seedLabel: { en: "Seed", sw: "Mbegu" },
     defaultFertilizer: "DAP",
@@ -49,6 +52,7 @@ export const CROPS: CropInfo[] = [
   {
     id: "beans",
     name: { en: "Beans", sw: "Maharagwe" },
+    shortName: { en: "Beans", sw: "Maharagwe" },
     aliases: ["beans", "bean", "maharagwe", "maharage"],
     seedLabel: { en: "Seed", sw: "Mbegu" },
     defaultFertilizer: "DAP",
@@ -65,6 +69,7 @@ export const CROPS: CropInfo[] = [
   {
     id: "potatoes",
     name: { en: "Irish potatoes", sw: "Viazi" },
+    shortName: { en: "Potatoes", sw: "Viazi" },
     aliases: ["irish potatoes", "irish potato", "potatoes", "potato", "viazi", "waru"],
     seedLabel: { en: "Seed potatoes", sw: "Mbegu za viazi" },
     defaultFertilizer: "DAP",
@@ -81,6 +86,7 @@ export const CROPS: CropInfo[] = [
   {
     id: "tomatoes",
     name: { en: "Tomatoes", sw: "Nyanya" },
+    shortName: { en: "Tomatoes", sw: "Nyanya" },
     aliases: ["tomatoes", "tomato", "nyanya"],
     seedLabel: { en: "Seed and seedlings", sw: "Mbegu na miche" },
     defaultFertilizer: "DAP",
@@ -101,6 +107,7 @@ export const CROPS: CropInfo[] = [
   {
     id: "tea",
     name: { en: "Tea", sw: "Majani chai" },
+    shortName: { en: "Tea", sw: "Chai" },
     aliases: ["tea", "green leaf", "majani chai", "chai"],
     seedLabel: { en: "Planting material", sw: "Miche" },
     defaultFertilizer: "NPK",
@@ -121,6 +128,7 @@ export const CROPS: CropInfo[] = [
   {
     id: "kale",
     name: { en: "Sukuma wiki (kale)", sw: "Sukuma wiki" },
+    shortName: { en: "Sukuma wiki", sw: "Sukuma wiki" },
     aliases: ["sukuma wiki", "sukuma", "kale", "collards", "collard greens"],
     seedLabel: { en: "Seed", sw: "Mbegu" },
     defaultFertilizer: "DAP",

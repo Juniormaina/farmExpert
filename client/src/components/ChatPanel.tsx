@@ -3,8 +3,10 @@ import { sendChatMessage } from "../api/client";
 import { useAppContext } from "../context/AppContext";
 import { UI_STRINGS } from "../i18n";
 import { keyPointsFor } from "../insights";
-import type { AgentResponse, Locale } from "../types";
+import { suggestionsFor } from "../suggestions";
+import type { AgentIntent, AgentResponse, Locale } from "../types";
 import { HighlightedText, KeyPoints } from "./Highlights";
+import { PanelHeader } from "./PanelHeader";
 
 interface ChatEntry {
   from: "user" | "agent";
@@ -14,33 +16,18 @@ interface ChatEntry {
   locale?: Locale;
 }
 
-const SUGGESTIONS: Record<Locale, string[]> = {
-  en: [
-    "Tomato prices in Eldoret?",
-    "Tea price in Kericho?",
-    "Potato prices in Nakuru?",
-    "I have KSh 20,000 for 1 acre of beans in Nakuru",
-    "Is CAN available in Eldoret?"
-  ],
-  sw: [
-    "Bei ya nyanya Eldoret?",
-    "Bei ya majani chai Kericho?",
-    "Bei ya viazi Nakuru?",
-    "Nina shilingi 20,000 kwa ekari 1 ya maharagwe Nakuru",
-    "CAN iko Eldoret?"
-  ]
-};
-
 export function ChatPanel() {
-  const { locale, demoProfile, demoQueryTrigger, demoResetKey, setCounty, setCrop } = useAppContext();
+  const { locale, demoProfile, demoQueryTrigger, demoResetKey, county, setCounty, crop, setCrop } = useAppContext();
   const t = UI_STRINGS[locale];
   const [messages, setMessages] = useState<ChatEntry[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [lastIntent, setLastIntent] = useState<AgentIntent | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMessages([]);
+    setLastIntent(undefined);
   }, [demoResetKey]);
 
   useEffect(() => {
@@ -67,6 +54,7 @@ export function ChatPanel() {
       ]);
       if (reply.entities.county) setCounty(reply.entities.county);
       if (reply.entities.crop) setCrop(reply.entities.crop);
+      setLastIntent(reply.intent);
     } finally {
       setSending(false);
     }
@@ -81,8 +69,9 @@ export function ChatPanel() {
 
   return (
     <section className="card">
-      <h2>{t.chatTitle}</h2>
+      <PanelHeader title={t.chatTitle} subtitle={t.chatSubtitle} />
       <div className="chat-window chat-window-main" ref={scrollRef} aria-live="polite">
+        {messages.length === 0 && !sending && <p className="chat-empty">{t.chatEmpty}</p>}
         {messages.map((m, i) =>
           m.from === "user" ? (
             <div key={i} className="chat-bubble user">
@@ -112,12 +101,8 @@ export function ChatPanel() {
         )}
       </div>
 
-      <div className="suggestions">
-        <span className="suggestions-label">{t.tryAsking}</span>
-        <button className="chip chip-featured" onClick={() => send(demoProfile.sampleQuery)} disabled={sending}>
-          {t.startDemoQuery}
-        </button>
-        {SUGGESTIONS[locale].map((s) => (
+      <div className="suggestions" aria-label={t.tryAsking}>
+        {suggestionsFor(lastIntent, crop, county, demoProfile.budgetKsh, locale).map((s) => (
           <button key={s} className="chip" onClick={() => send(s)} disabled={sending}>
             {s}
           </button>

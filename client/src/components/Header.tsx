@@ -40,6 +40,8 @@ export function Header() {
           </div>
         </div>
 
+        <div className="hero-photo" aria-hidden="true" />
+
         <p className="tagline">{t.tagline}</p>
         <p className="subtitle">{t.subtitle}</p>
 
