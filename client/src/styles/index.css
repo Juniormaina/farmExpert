@@ -407,66 +407,229 @@ input, select, textarea {
   font-weight: 600;
 }
 
-/* Phone simulators */
-.phone {
+/* ---------- Phone handset shared by SMS and USSD ---------- */
+.handset {
+  position: relative;
   width: 100%;
   max-width: 300px;
+  height: 600px;
   margin: 0 auto;
-  padding: 12px;
-  border-radius: 34px;
-  background: #1f1d18;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25), inset 0 0 0 2px #3a372f;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 10px solid #1b1a17;
+  border-radius: 40px;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28), inset 0 0 0 1px #2c2a25;
+  color: #1b1a17;
 }
 
-.phone-statusbar {
+.status-bar {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 18px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 2px 12px 0;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  color: #cfc6b0;
-  letter-spacing: 0.02em;
+  color: #1b1a17;
+  background: #ffffff;
 }
 
-.phone-screen {
-  background: #f4f1e8;
-  border-radius: 20px;
-  padding: 12px;
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.signal {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10px;
+}
+
+.signal i {
+  width: 3px;
+  background: #1b1a17;
+  border-radius: 1px;
+}
+
+.signal i:nth-child(1) { height: 3px; }
+.signal i:nth-child(2) { height: 5px; }
+.signal i:nth-child(3) { height: 7px; }
+.signal i:nth-child(4) { height: 10px; }
+
+.battery {
+  position: relative;
+  width: 20px;
+  height: 10px;
+  border: 1.5px solid #1b1a17;
+  border-radius: 3px;
+  padding: 1px;
+}
+
+.battery::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: 2.5px;
+  width: 2px;
+  height: 3px;
+  background: #1b1a17;
+  border-radius: 0 1px 1px 0;
+}
+
+.battery i {
+  display: block;
+  width: 70%;
+  height: 100%;
+  background: #1b1a17;
+  border-radius: 1px;
+}
+
+/* ---------- SMS: messaging app ---------- */
+.sms-app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sms-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid #ecebe6;
+}
+
+.sms-back {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #1b1a17;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sms-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sms-contact {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.sms-contact strong { font-size: 0.92rem; }
+.sms-contact span { font-size: 0.7rem; color: #77736a; }
+
+.sms-thread {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-}
-
-.sms-screen {
-  height: 320px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.sms-day {
+  align-self: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #8b867b;
+  margin-bottom: 2px;
+}
+
+.sms-row {
+  display: flex;
+  flex-direction: column;
+  max-width: 84%;
+}
+
+.sms-row.sent {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.sms-row.received {
+  align-self: flex-start;
+}
+
 .sms-bubble {
-  max-width: 85%;
   padding: 8px 12px;
-  border-radius: 16px;
-  font-size: 0.85rem;
+  border-radius: 18px;
+  font-size: 0.84rem;
   line-height: 1.4;
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.sms-bubble.sent {
-  align-self: flex-end;
+.sms-row.sent .sms-bubble {
   background: var(--color-green-700);
-  color: var(--color-white);
-  border-bottom-right-radius: 4px;
+  color: #ffffff;
+  border-bottom-right-radius: 5px;
 }
 
-.sms-bubble.received {
-  align-self: flex-start;
-  background: var(--color-white);
-  color: var(--color-neutral-900);
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+.sms-row.received .sms-bubble {
+  background: #eef0ea;
+  color: #1b1a17;
+  border-bottom-left-radius: 5px;
+}
+
+.sms-meta {
+  font-size: 0.64rem;
+  color: #8b867b;
+  margin-top: 3px;
+  padding: 0 4px;
+}
+
+.sms-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 12px;
+  border-top: 1px solid #ecebe6;
+}
+
+.sms-composer input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 999px;
+  background: #f1f0ec;
+  font-size: 0.88rem;
+}
+
+.sms-send {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-green-700);
+  display: grid;
+  place-items: center;
+}
+
+.sms-send svg {
+  width: 18px;
+  height: 18px;
+  fill: #ffffff;
+}
+
+.sms-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .phone-empty {
@@ -476,93 +639,325 @@ input, select, textarea {
   align-items: center;
   gap: 8px;
   text-align: center;
-  color: var(--color-neutral-700);
-  font-size: 0.82rem;
+  color: #77736a;
+  font-size: 0.8rem;
 }
 
 .phone-empty p {
-  margin: 0 0 4px;
-}
-
-.phone-input {
-  display: flex;
-  gap: 8px;
-}
-
-.phone-input input {
-  flex: 1;
-  min-width: 0;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: none;
-  background: #f4f1e8;
-}
-
-.phone-input .btn-primary {
-  padding: 10px 16px;
-}
-
-.ussd-screen {
-  height: 210px;
-  background: #0f1a12;
-  border-radius: 16px;
-}
-
-.ussd-text {
   margin: 0;
-  white-space: pre-wrap;
-  font-family: "Courier New", monospace;
-  font-size: 0.85rem;
-  line-height: 1.45;
-  color: #b6ffcf;
 }
 
-.keypad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* ---------- USSD: phone dialer ---------- */
+.dialer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 16px 18px;
+}
+
+.dial-display {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.key {
-  height: 42px;
+.dial-number {
+  font-size: 1.7rem;
+  letter-spacing: 0.04em;
+  color: #1b1a17;
+}
+
+.dial-backspace {
   border: none;
-  border-radius: 12px;
-  background: #3a372f;
-  color: var(--color-white);
-  font-size: 1.05rem;
-  font-weight: 700;
-  transition: background 0.1s, transform 0.05s;
+  background: none;
+  padding: 4px;
+  display: grid;
+  place-items: center;
 }
 
-.key:hover:not(:disabled) {
-  background: #4a463b;
+.dial-backspace svg,
+.number-pad svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #57534a;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
-.key:active:not(:disabled) {
-  transform: scale(0.96);
+.dial-backspace:disabled {
+  visibility: hidden;
 }
 
-.key-muted {
-  font-size: 0.8rem;
-  color: #cfc6b0;
+.dial-hint {
+  margin: 2px 0 14px;
+  font-size: 0.7rem;
+  color: #8b867b;
+  text-align: center;
 }
 
-.key-send {
-  background: var(--color-green-700);
-  font-size: 0.85rem;
+.dial-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  gap: 8px 22px;
 }
 
-.key-send:hover:not(:disabled) {
-  background: var(--color-green-500);
+.dial-key {
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #1b1a17;
+  transition: background 0.12s;
 }
 
-.key:disabled {
-  opacity: 0.45;
+.dial-key:hover:not(:disabled) {
+  background: #f0efea;
+}
+
+.dial-key:active:not(:disabled) {
+  background: #e3e1da;
+}
+
+.dial-digit {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.dial-letters {
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  color: #8b867b;
+  margin-top: 2px;
+}
+
+.call-button {
+  margin-top: 12px;
+  width: 58px;
+  height: 58px;
+  border: none;
+  border-radius: 50%;
+  background: #1f9d4c;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 16px rgba(31, 157, 76, 0.4);
+  transition: transform 0.1s, background 0.12s;
+}
+
+.call-button svg {
+  width: 26px;
+  height: 26px;
+  fill: #ffffff;
+}
+
+.call-button:hover:not(:disabled) {
+  background: #25b058;
+}
+
+.call-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.call-button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.phone-full-button {
+/* ---------- USSD: the system pop-up ---------- */
+.ussd-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px 0;
+  background: rgba(10, 10, 8, 0.5);
+  animation: fade-in 0.15s ease-out;
+}
+
+.ussd-dialog {
+  margin: auto 0;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px 18px 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.ussd-message {
+  margin: 0 0 10px;
+  max-height: 230px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #1b1a17;
+}
+
+.ussd-field {
   width: 100%;
+  padding: 6px 2px;
+  border: none;
+  border-bottom: 2px solid var(--color-green-700);
+  background: transparent;
+  font-size: 1rem;
+  outline: none;
+}
+
+.ussd-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.ussd-actions button {
+  border: none;
+  background: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-green-700);
+}
+
+.ussd-actions button:hover:not(:disabled) {
+  background: var(--color-green-100);
+}
+
+.ussd-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ussd-running {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0 18px;
+  font-size: 0.9rem;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 3px solid #e3e1da;
+  border-top-color: var(--color-green-700);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.number-pad {
+  margin: 12px -14px 0;
+  padding: 8px;
+  background: #e8e7e2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.number-pad button {
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 1.1rem;
+  color: #1b1a17;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+}
+
+.number-pad button:active {
+  background: #d9d7cf;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2.4s; }
+  .ussd-overlay { animation: none; }
+}
+
+/* ---------- Web chat: messenger header ---------- */
+.chat-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--color-neutral-300);
+}
+
+.chat-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.chat-contact {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.chat-contact strong {
+  font-size: 1rem;
+  color: var(--color-green-900);
+}
+
+.presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--color-neutral-700);
+}
+
+.presence::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9a9486;
+}
+
+.presence.online::before {
+  background: #3bb56b;
+}
+
+.chat-langs {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--color-neutral-700);
+  text-align: right;
+}
+
+.bubble-time {
+  display: block;
+  margin-top: 4px;
+  text-align: right;
+  font-size: 0.64rem;
+  opacity: 0.65;
 }
 
 .form-grid {
@@ -1144,6 +1539,7 @@ input, select, textarea {
 /* Keep the chat or phone in view while scrolling the price cards, but only
    when the window is tall enough to show all of it. */
 @media (max-width: 480px) {
+  .chat-langs { display: none; }
   .agent-turn { max-width: 100%; }
   .key-point { padding: 6px 8px; }
   .key-point-value { font-size: 0.95rem; }

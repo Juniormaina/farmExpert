@@ -6,18 +6,20 @@ import { keyPointsFor } from "../insights";
 import { suggestionsFor } from "../suggestions";
 import type { AgentIntent, AgentResponse, Locale } from "../types";
 import { HighlightedText, KeyPoints } from "./Highlights";
-import { PanelHeader } from "./PanelHeader";
+import { formatClock } from "./PhoneStatusBar";
 
 interface ChatEntry {
   from: "user" | "agent";
   text: string;
+  time: string;
   source?: "live" | "bundled";
   data?: AgentResponse["data"];
   locale?: Locale;
 }
 
 export function ChatPanel() {
-  const { locale, demoProfile, demoQueryTrigger, demoResetKey, county, setCounty, crop, setCrop } = useAppContext();
+  const { locale, demoProfile, demoQueryTrigger, demoResetKey, county, setCounty, crop, setCrop, statusLabel } = useAppContext();
+  const online = statusLabel !== "offline-cached" && statusLabel !== "waiting-for-connectivity";
   const t = UI_STRINGS[locale];
   const [messages, setMessages] = useState<ChatEntry[]>([]);
   const [input, setInput] = useState("");
@@ -36,7 +38,7 @@ export function ChatPanel() {
 
   async function send(text: string) {
     if (!text.trim() || sending) return;
-    setMessages((prev) => [...prev, { from: "user", text }]);
+    setMessages((prev) => [...prev, { from: "user", text, time: formatClock(new Date()) }]);
     setInput("");
     setSending(true);
     try {
@@ -47,6 +49,7 @@ export function ChatPanel() {
         {
           from: "agent",
           text: reply.reply,
+          time: formatClock(new Date()),
           source: result.source === "live" ? "live" : "bundled",
           data: reply.data,
           locale: reply.locale
@@ -69,13 +72,21 @@ export function ChatPanel() {
 
   return (
     <section className="card">
-      <PanelHeader title={t.chatTitle} subtitle={t.chatSubtitle} />
+      <div className="chat-topbar">
+        <img className="chat-avatar" src="/icon-192.png" alt="" />
+        <div className="chat-contact">
+          <strong>ShambaAI</strong>
+          <span className={online ? "presence online" : "presence offline"}>{online ? t.chatOnline : t.chatOffline}</span>
+        </div>
+        <span className="chat-langs">{t.chatSubtitle}</span>
+      </div>
       <div className="chat-window chat-window-main" ref={scrollRef} aria-live="polite">
         {messages.length === 0 && !sending && <p className="chat-empty">{t.chatEmpty}</p>}
         {messages.map((m, i) =>
           m.from === "user" ? (
             <div key={i} className="chat-bubble user">
               {m.text}
+              <span className="bubble-time">{m.time}</span>
             </div>
           ) : (
             <div key={i} className="agent-turn">
@@ -85,6 +96,7 @@ export function ChatPanel() {
                 {m.source === "bundled" && (
                   <div className="offline-note">{locale === "sw" ? "(jibu la nje ya mtandao)" : "(offline fallback reply)"}</div>
                 )}
+                <span className="bubble-time">{m.time}</span>
               </div>
             </div>
           )
