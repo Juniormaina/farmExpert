@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { getMaizePrices, listCounties } from "../src/agriculture/marketService.js";
+import { getCropPrices, listCounties } from "../src/agriculture/marketService.js";
+import { CROP_IDS } from "../src/shared/crops.js";
 
 describe("marketService", () => {
   it("returns demo maize prices for Nakuru", () => {
-    const prices = getMaizePrices({ county: "Nakuru" });
-    expect(prices.length).toBeGreaterThan(0);
+    const prices = getCropPrices({ crop: "maize", county: "Nakuru" });
+    expect(prices.map((p) => p.pricePerUnit)).toEqual([3200, 3600]);
     for (const p of prices) {
       expect(p.county).toBe("Nakuru");
+      expect(p.crop).toBe("maize");
+      expect(p.unit).toBe("bag");
+      expect(p.unitKg).toBe(90);
       expect(p.isDemoData).toBe(true);
       expect(p.freshness).toBe("illustrative");
       expect(p.source).toContain("Demo");
@@ -14,19 +18,28 @@ describe("marketService", () => {
     }
   });
 
-  it("returns demo maize prices for Eldoret/Uasin Gishu", () => {
-    const prices = getMaizePrices({ county: "Uasin Gishu" });
-    expect(prices.length).toBeGreaterThan(0);
+  it("has demo prices for every crop somewhere", () => {
+    for (const crop of CROP_IDS) {
+      expect(getCropPrices({ crop }).length, crop).toBeGreaterThan(0);
+    }
+  });
+
+  it("uses the right selling unit for each crop", () => {
+    expect(getCropPrices({ crop: "potatoes" })[0]).toMatchObject({ unit: "bag", unitKg: 50 });
+    expect(getCropPrices({ crop: "tomatoes" })[0]).toMatchObject({ unit: "crate", unitKg: 64 });
+    expect(getCropPrices({ crop: "tea" })[0]).toMatchObject({ unit: "kg", unitKg: 1 });
+  });
+
+  it("only has tea prices in Kericho, where tea is grown", () => {
+    expect(getCropPrices({ crop: "tea" }).every((p) => p.county === "Kericho")).toBe(true);
+    expect(getCropPrices({ crop: "tea", county: "Nakuru" })).toEqual([]);
   });
 
   it("returns an empty array for an unknown county", () => {
-    const prices = getMaizePrices({ county: "Nonexistent County" });
-    expect(prices).toEqual([]);
+    expect(getCropPrices({ crop: "maize", county: "Nonexistent County" })).toEqual([]);
   });
 
-  it("lists at least two demo counties", () => {
-    const counties = listCounties();
-    expect(counties).toContain("Nakuru");
-    expect(counties).toContain("Uasin Gishu");
+  it("lists the three demo counties", () => {
+    expect(listCounties()).toEqual(["Kericho", "Nakuru", "Uasin Gishu"]);
   });
 });

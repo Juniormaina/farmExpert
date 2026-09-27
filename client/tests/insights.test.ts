@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { cheapestAvailable, highestMaizePrice, keyPointsFor, splitMoney } from "../src/insights";
+import { cheapestAvailable, highestPrice, keyPointsFor, splitMoney } from "../src/insights";
 import { LOCAL_FERTILIZER_LISTINGS, LOCAL_MARKET_PRICES } from "../src/offline/localData";
 import { calculateBudgetLocally } from "../src/offline/localBudget";
 
 describe("insights", () => {
   it("picks the highest maize price", () => {
-    const nakuru = LOCAL_MARKET_PRICES.filter((p) => p.county === "Nakuru");
-    expect(highestMaizePrice(nakuru)?.pricePerBag).toBe(3600);
+    const nakuru = LOCAL_MARKET_PRICES.filter((p) => p.county === "Nakuru" && p.crop === "maize");
+    expect(highestPrice(nakuru)?.pricePerUnit).toBe(3600);
   });
 
   it("never recommends an out-of-stock fertilizer, however cheap", () => {
@@ -23,17 +23,18 @@ describe("insights", () => {
   });
 
   it("builds key points for Mary's budget, flagging the shortfall", () => {
-    const budget = calculateBudgetLocally({ county: "Nakuru", farmSizeAcres: 1, budgetKsh: 12000, fertilizerType: "DAP" });
+    const budget = calculateBudgetLocally({ county: "Nakuru", crop: "maize", farmSizeAcres: 1, budgetKsh: 12000, fertilizerType: "DAP" });
     const points = keyPointsFor(
       {
-        marketPrices: LOCAL_MARKET_PRICES.filter((p) => p.county === "Nakuru"),
+        marketPrices: LOCAL_MARKET_PRICES.filter((p) => p.county === "Nakuru" && p.crop === "maize"),
         fertilizerListings: LOCAL_FERTILIZER_LISTINGS.filter((l) => l.county === "Nakuru"),
         budget
       },
       "en"
     );
-    expect(points.map((p) => p.id)).toEqual(["maize", "fertilizer", "cost", "gap"]);
-    expect(points.find((p) => p.id === "maize")?.value).toBe("KSh 3,600 / 90kg");
+    expect(points.map((p) => p.id)).toEqual(["price", "fertilizer", "cost", "gap"]);
+    expect(points.find((p) => p.id === "price")?.label).toBe("Highest price: Maize");
+    expect(points.find((p) => p.id === "price")?.value).toBe("KSh 3,600 / 90kg bag");
     expect(points.find((p) => p.id === "fertilizer")?.value).toBe("CAN KSh 4,200");
     expect(points.find((p) => p.id === "cost")?.value).toBe("KSh 20,000");
     const gap = points.find((p) => p.id === "gap");
@@ -42,7 +43,7 @@ describe("insights", () => {
   });
 
   it("shows money left over in green when the budget is enough", () => {
-    const budget = calculateBudgetLocally({ county: "Nakuru", farmSizeAcres: 1, budgetKsh: 25000, fertilizerType: "DAP" });
+    const budget = calculateBudgetLocally({ county: "Nakuru", crop: "maize", farmSizeAcres: 1, budgetKsh: 25000, fertilizerType: "DAP" });
     const gap = keyPointsFor({ budget }, "sw").find((p) => p.id === "gap");
     expect(gap?.tone).toBe("good");
     expect(gap?.label).toBe("Kilichobaki kwenye bajeti");
@@ -58,5 +59,16 @@ describe("insights", () => {
     const parts = splitMoney("Maize: KSh 3,200 per bag, DAP KSh 6,500.");
     expect(parts.filter((p) => p.money).map((p) => p.text)).toEqual(["KSh 3,200", "KSh 6,500"]);
     expect(parts.map((p) => p.text).join("")).toBe("Maize: KSh 3,200 per bag, DAP KSh 6,500.");
+  });
+});
+
+describe("insights for other crops", () => {
+  it("names the crop and uses its selling unit", () => {
+    const tomatoes = LOCAL_MARKET_PRICES.filter((p) => p.crop === "tomatoes");
+    const [point] = keyPointsFor({ marketPrices: tomatoes }, "en");
+    expect(point.label).toBe("Highest price: Tomatoes");
+    expect(point.value).toBe("KSh 5,000 / 64kg crate");
+    const [sw] = keyPointsFor({ marketPrices: tomatoes }, "sw");
+    expect(sw.value).toBe("KSh 5,000 / kreti ya 64kg");
   });
 });

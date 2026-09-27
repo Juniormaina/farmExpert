@@ -16,21 +16,23 @@ interface ChatEntry {
 
 const SUGGESTIONS: Record<Locale, string[]> = {
   en: [
-    "Maize price in Eldoret?",
-    "How much is DAP in Nakuru?",
-    "Is CAN available in Eldoret?",
-    "I have KSh 15,000 for 2 acres in Nakuru"
+    "Tomato prices in Eldoret?",
+    "Tea price in Kericho?",
+    "Potato prices in Nakuru?",
+    "I have KSh 20,000 for 1 acre of beans in Nakuru",
+    "Is CAN available in Eldoret?"
   ],
   sw: [
-    "Bei ya mahindi Eldoret?",
-    "Bei ya DAP Nakuru ni ngapi?",
-    "CAN iko Eldoret?",
-    "Nina shilingi 15,000 kwa ekari 2 Nakuru"
+    "Bei ya nyanya Eldoret?",
+    "Bei ya majani chai Kericho?",
+    "Bei ya viazi Nakuru?",
+    "Nina shilingi 20,000 kwa ekari 1 ya maharagwe Nakuru",
+    "CAN iko Eldoret?"
   ]
 };
 
 export function ChatPanel() {
-  const { locale, demoProfile, demoQueryTrigger, demoResetKey, setCounty } = useAppContext();
+  const { locale, demoProfile, demoQueryTrigger, demoResetKey, setCounty, setCrop } = useAppContext();
   const t = UI_STRINGS[locale];
   const [messages, setMessages] = useState<ChatEntry[]>([]);
   const [input, setInput] = useState("");
@@ -64,6 +66,7 @@ export function ChatPanel() {
         }
       ]);
       if (reply.entities.county) setCounty(reply.entities.county);
+      if (reply.entities.crop) setCrop(reply.entities.crop);
     } finally {
       setSending(false);
     }
@@ -111,6 +114,9 @@ export function ChatPanel() {
 
       <div className="suggestions">
         <span className="suggestions-label">{t.tryAsking}</span>
+        <button className="chip chip-featured" onClick={() => send(demoProfile.sampleQuery)} disabled={sending}>
+          {t.startDemoQuery}
+        </button>
         {SUGGESTIONS[locale].map((s) => (
           <button key={s} className="chip" onClick={() => send(s)} disabled={sending}>
             {s}
@@ -129,9 +135,6 @@ export function ChatPanel() {
           {t.send}
         </button>
       </div>
-      <button className="btn-secondary" style={{ marginTop: 10 }} onClick={() => send(demoProfile.sampleQuery)} disabled={sending}>
-        {t.startDemoQuery}
-      </button>
     </section>
   );
 }

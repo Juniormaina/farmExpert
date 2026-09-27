@@ -14,15 +14,15 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   en: {
     productName: "ShambaAI",
     tagline: "Farming decisions, made simpler.",
-    subtitle: "Ask about maize prices, fertilizer costs, and your planting budget, even when connectivity is limited.",
-    greeting: "Habari! I'm ShambaAI. Ask me about maize prices, fertilizer costs, or your planting budget.",
-    help: "You can ask things like: 'What is the maize price in Nakuru?', 'How much is DAP fertilizer?', or 'I have KSh 12,000 for 1 acre, help me plan.'"
+    subtitle: "Ask about crop prices, fertilizer costs, and your planting budget, even when connectivity is limited.",
+    greeting: "Habari! I'm ShambaAI. Ask me about crop prices, fertilizer costs, or your planting budget.",
+    help: "I can help with maize, beans, Irish potatoes, tomatoes, tea and sukuma wiki. Try: 'What is the maize price in Nakuru?', 'Tomato prices in Eldoret?', 'How much is DAP fertilizer?', or 'I have KSh 12,000 for 1 acre of beans in Nakuru, help me plan.'"
   },
   sw: {
     productName: "ShambaAI",
     tagline: "Maamuzi ya kilimo, kwa urahisi zaidi.",
-    subtitle: "Uliza bei ya mahindi, gharama ya mbolea, na bajeti ya kupanda, hata mtandao ukiwa mbovu.",
-    greeting: "Habari! Mimi ni ShambaAI. Niulize kuhusu bei ya mahindi, gharama ya mbolea, au bajeti ya kupanda.",
-    help: "Unaweza kuuliza kama: 'Bei ya mahindi Nakuru ni ngapi?', 'Bei ya mbolea DAP ni ngapi?', au 'Nina shilingi 12,000 kwa ekari moja, nisaidie kupanga.'"
+    subtitle: "Uliza bei za mazao, gharama ya mbolea, na bajeti ya kupanda, hata mtandao ukiwa mbovu.",
+    greeting: "Habari! Mimi ni ShambaAI. Niulize kuhusu bei za mazao, gharama ya mbolea, au bajeti ya kupanda.",
+    help: "Naweza kusaidia na mahindi, maharagwe, viazi, nyanya, majani chai na sukuma wiki. Jaribu: 'Bei ya mahindi Nakuru ni ngapi?', 'Bei ya nyanya Eldoret?', 'Bei ya mbolea DAP ni ngapi?', au 'Nina shilingi 12,000 kwa ekari moja ya maharagwe Nakuru, nisaidie kupanga.'"
   }
 };

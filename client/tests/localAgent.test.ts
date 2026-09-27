@@ -25,4 +25,18 @@ describe("answerLocally (offline chat fallback, no network/AI provider)", () => 
     const result = answerLocally("Maize price in Nakuru?");
     expect(result.data?.marketPrices?.every((p) => p.county === "Nakuru")).toBe(true);
   });
+
+  it("answers about other crops offline, in the question's language", () => {
+    const result = answerLocally("Bei ya viazi Nakuru?");
+    expect(result.locale).toBe("sw");
+    expect(result.data?.marketPrices?.every((p) => p.crop === "potatoes" && p.county === "Nakuru")).toBe(true);
+    expect(result.reply).toContain("Bei za viazi:");
+    expect(result.reply).toContain("kwa gunia la 50kg");
+  });
+
+  it("plans a tea budget offline with tea's defaults", () => {
+    const result = answerLocally("I have KSh 40,000 for 1 acre of tea in Kericho");
+    expect(result.data?.budget?.input).toMatchObject({ crop: "tea", fertilizerType: "NPK" });
+    expect(result.data?.budget?.totalEstimatedCostKsh).toBe(37800);
+  });
 });

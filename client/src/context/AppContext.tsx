@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Channel, DemoProfile, Locale, SystemStatus } from "../types";
+import type { Channel, CropId, DemoProfile, Locale, SystemStatus } from "../types";
 import { getDemoProfile, getStatus, resetDemo as apiResetDemo, syncPendingMessages } from "../api/client";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { LOCAL_DEMO_PROFILE } from "../offline/localData";
@@ -28,6 +28,8 @@ interface AppContextValue {
   demoQueryTrigger: number;
   county: string;
   setCounty: (county: string) => void;
+  crop: CropId;
+  setCrop: (crop: CropId) => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -41,6 +43,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [demoResetKey, setDemoResetKey] = useState(0);
   const [demoQueryTrigger, setDemoQueryTrigger] = useState(0);
   const [county, setCounty] = useState(LOCAL_DEMO_PROFILE.county);
+  const [crop, setCrop] = useState<CropId>(LOCAL_DEMO_PROFILE.crop);
   const browserOnline = useOnlineStatus();
 
   const refreshStatus = useCallback(async () => {
@@ -69,9 +72,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await apiResetDemo();
     setChannel("web");
     setCounty(demoProfile.county);
+    setCrop(demoProfile.crop);
     setDemoResetKey((k) => k + 1);
     await refreshStatus();
-  }, [refreshStatus, demoProfile.county]);
+  }, [refreshStatus, demoProfile.county, demoProfile.crop]);
 
   const startDemo = useCallback(() => {
     setChannel("web");
@@ -103,7 +107,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     demoResetKey,
     demoQueryTrigger,
     county,
-    setCounty
+    setCounty,
+    crop,
+    setCrop
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

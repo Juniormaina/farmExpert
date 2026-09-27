@@ -1,4 +1,7 @@
+import { cropName, formatKsh, formatUnitPrice } from "../../server/src/shared/format";
 import type { AgentResponse, FertilizerListing, Locale, MarketPrice } from "./types";
+
+export { formatKsh };
 
 export interface KeyPoint {
   id: string;
@@ -8,12 +11,8 @@ export interface KeyPoint {
   tone: "good" | "bad" | "neutral";
 }
 
-export function formatKsh(amount: number): string {
-  return `KSh ${Math.round(amount).toLocaleString("en-US")}`;
-}
-
-export function highestMaizePrice(prices: MarketPrice[]): MarketPrice | undefined {
-  return prices.reduce<MarketPrice | undefined>((best, p) => (!best || p.pricePerBag > best.pricePerBag ? p : best), undefined);
+export function highestPrice(prices: MarketPrice[]): MarketPrice | undefined {
+  return prices.reduce<MarketPrice | undefined>((best, p) => (!best || p.pricePerUnit > best.pricePerUnit ? p : best), undefined);
 }
 
 // Out-of-stock listings are no use to a farmer today, however cheap.
@@ -25,14 +24,14 @@ export function cheapestAvailable(listings: FertilizerListing[]): FertilizerList
 
 const LABELS: Record<Locale, Record<string, string>> = {
   en: {
-    highestMaize: "Highest maize price",
+    highestPrice: "Highest price: {crop}",
     cheapestFertilizer: "Cheapest fertilizer in stock",
     totalCost: "Estimated cost",
     shortBy: "Budget short by",
     leftOver: "Left in budget"
   },
   sw: {
-    highestMaize: "Bei ya juu ya mahindi",
+    highestPrice: "Bei ya juu: {crop}",
     cheapestFertilizer: "Mbolea rahisi zaidi iliyopo",
     totalCost: "Gharama inayokadiriwa",
     shortBy: "Bajeti haitoshi kwa",
@@ -46,13 +45,13 @@ export function keyPointsFor(data: AgentResponse["data"], locale: Locale): KeyPo
   const l = LABELS[locale];
   const points: KeyPoint[] = [];
 
-  const topMaize = data?.marketPrices && data.marketPrices.length > 1 ? highestMaizePrice(data.marketPrices) : undefined;
-  if (topMaize) {
+  const top = data?.marketPrices && data.marketPrices.length > 1 ? highestPrice(data.marketPrices) : undefined;
+  if (top) {
     points.push({
-      id: "maize",
-      label: l.highestMaize,
-      value: `${formatKsh(topMaize.pricePerBag)} / ${topMaize.bagSizeKg}kg`,
-      detail: topMaize.market,
+      id: "price",
+      label: l.highestPrice.replace("{crop}", cropName(top.crop, locale)),
+      value: formatUnitPrice(top, locale),
+      detail: top.market,
       tone: "neutral"
     });
   }

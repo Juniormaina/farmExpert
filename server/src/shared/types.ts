@@ -1,3 +1,7 @@
+import type { CropBudgetDefaults, CropId, FertilizerType, PriceUnit } from "./crops.js";
+
+export type { CropId, FertilizerType, PriceUnit } from "./crops.js";
+
 export type Locale = "en" | "sw";
 
 export type DataFreshness = "verified" | "cached" | "illustrative" | "unknown";
@@ -5,17 +9,17 @@ export type DataFreshness = "verified" | "cached" | "illustrative" | "unknown";
 export interface MarketPrice {
   market: string;
   county: string;
-  crop: "maize";
-  pricePerBag: number;
-  bagSizeKg: number;
+  crop: CropId;
+  pricePerUnit: number;
+  unit: PriceUnit;
+  // Weight of one selling unit, e.g. 90 for a 90kg bag, 1 for per-kg prices.
+  unitKg: number;
   classification: "wholesale" | "retail" | "farm-gate";
   source: string;
   lastUpdated: string;
   freshness: DataFreshness;
   isDemoData: true;
 }
-
-export type FertilizerType = "DAP" | "NPK" | "UREA" | "CAN";
 
 export interface FertilizerListing {
   type: FertilizerType;
@@ -33,22 +37,14 @@ export interface FertilizerListing {
 
 export interface BudgetInput {
   county: string;
-  crop: "maize";
+  crop: CropId;
   farmSizeAcres: number;
   budgetKsh: number;
   fertilizerType: FertilizerType;
   assumptions?: Partial<BudgetAssumptions>;
 }
 
-export interface BudgetAssumptions {
-  fertilizerBagsPerAcre: number;
-  seedCostPerAcre: number;
-  laborCostPerAcre: number;
-  landPrepCostPerAcre: number;
-  includeSeed: boolean;
-  includeLabor: boolean;
-  includeLandPrep: boolean;
-}
+export type BudgetAssumptions = CropBudgetDefaults;
 
 export interface BudgetLineItem {
   label: string;
@@ -70,7 +66,7 @@ export interface BudgetResult {
 
 export type AgentIntent =
   | "greeting"
-  | "maize_price"
+  | "crop_price"
   | "fertilizer_price"
   | "fertilizer_availability"
   | "budget_plan"
@@ -83,7 +79,7 @@ export interface ExtractedEntities {
   farmSizeAcres?: number;
   budgetKsh?: number;
   fertilizerType?: FertilizerType;
-  crop?: "maize";
+  crop?: CropId;
 }
 
 export interface AgentRequest {

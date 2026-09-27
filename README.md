@@ -2,7 +2,7 @@
 
 **Farming decisions, made simpler.**
 
-ShambaAI is an offline-first AI agent that helps Kenyan smallholder farmers check maize
+ShambaAI is an offline-first AI agent that helps Kenyan smallholder farmers check crop
 prices, compare fertilizer costs, and plan a planting budget. One agent serves three
 channels, so the same answers reach a farmer on a smartphone, a basic phone that can
 send SMS, or a feature phone that can only dial a USSD menu. It keeps working when the
@@ -38,7 +38,7 @@ internet connection is poor or gone.
 
 Most AI tools assume a modern smartphone, reliable internet and a data bundle. Many
 smallholder farmers in Kenya have none of those consistently, yet they still need to
-know what maize is selling for, what fertilizer costs, and whether their budget covers
+know what their crop is selling for, what fertilizer costs, and whether their budget covers
 the season.
 
 ShambaAI adapts to the farmer's technology instead of asking the farmer to adapt. The
@@ -104,7 +104,7 @@ The full demo takes about 90 seconds.
 | 0 to 15s | Explain the problem: AI tools assume a smartphone and good internet. |
 | 15 to 35s | Click **Start Demo**. Mary's question is sent and the reply shows maize prices, fertilizer prices and her budget plan. |
 | 35 to 50s | Open the **SMS** tab and send `Bei ya mbolea Nakuru?`. The same agent answers in a short text message. |
-| 50 to 65s | Open the **USSD** tab. Choose `3` (Plan budget), `1` (Nakuru), `1` (acre), `12000`, `1` (DAP) to get the same budget on a feature phone menu. |
+| 50 to 65s | Open the **USSD** tab. Choose `3` (Plan budget), `1` (Maize), `1` (Nakuru), `1` (acre), `12000`, `1` (DAP) to get the same budget on a feature phone menu. |
 | 65 to 80s | Turn off the network and reload. The status changes to *Offline: cached data available* and prices, chat and the budget calculator keep working. |
 | 80 to 90s | Wrap up: one agent, three channels, adapting to the farmer's device and connection. |
 
@@ -125,7 +125,7 @@ app can save itself, then turn off the network and reload.
 
 ### Three channels, one agent
 
-- **Web app.** A mobile-first dashboard with chat, maize price cards, fertilizer
+- **Web app.** A mobile-first dashboard with chat, crop price cards, fertilizer
   comparison cards, a budget calculator, a connection status indicator and an
   English/Kiswahili switch.
 - **SMS simulator.** A phone-style messaging screen. Replies are kept to 320
@@ -139,12 +139,12 @@ separate logic per channel apart from the USSD menu steps and the SMS length lim
 
 ### Key points at a glance
 
-- Every chat answer opens with highlighted key points: the highest maize price, the
+- Every chat answer opens with highlighted key points: the highest crop price, the
   cheapest fertilizer that is actually in stock, the estimated cost, and whether the
   budget is short (red) or has money left (green). These come from the calculated
   data, never from the AI's wording, so they are always the correct figures.
 - Prices inside replies are highlighted so they stand out from the text.
-- Price cards flag the **Best price** for maize and the **Cheapest in stock**
+- Price cards flag the **Best price** for the crop and the **Cheapest in stock**
   fertilizer. Out-of-stock fertilizer is dimmed and never recommended.
 
 ### Interactive
@@ -164,29 +164,50 @@ separate logic per channel apart from the USSD menu steps and the SMS length lim
   a Kiswahili answer and an English question gets an English one.
 - Kiswahili number words are understood, so *ekari moja* is read as 1 acre.
 
-### Market and fertilizer data
+### Crops and counties
 
-- Maize prices for Nakuru and Eldoret (Uasin Gishu), with market, bag size, and
-  wholesale, retail or farm-gate type.
-- DAP, NPK, Urea and CAN prices from fictional suppliers, with stock status (in stock,
-  low stock, out of stock).
+Six crops that are common or high-value for Kenyan smallholders, each sold in the unit
+farmers actually use:
+
+| Crop | Kiswahili | Sold by | Demo counties |
+|---|---|---|---|
+| Maize | Mahindi | 90kg bag | Nakuru, Eldoret, Kericho |
+| Beans | Maharagwe | 90kg bag | Nakuru, Eldoret, Kericho |
+| Irish potatoes | Viazi | 50kg bag | Nakuru, Eldoret |
+| Tomatoes | Nyanya | 64kg crate | Nakuru, Eldoret, Kericho |
+| Tea | Majani chai | kg of green leaf | Kericho |
+| Sukuma wiki (kale) | Sukuma wiki | kg | Nakuru, Eldoret, Kericho |
+
+- Pick a crop and county above the price cards, or just ask in chat, SMS or USSD. The
+  chat understands the English and Kiswahili names, plus common local words such as
+  *waru* for potatoes and *Molo* for the Nakuru potato area.
+- Tea only has prices in Kericho, where it is grown, rather than invented prices for
+  counties with no tea. Picking a crop and county with no data says so plainly.
+- DAP, NPK, Urea and CAN prices come from fictional suppliers in each county, with
+  stock status (in stock, low stock, out of stock).
 - Every price shows its source, a timestamp, and a demo-data label.
 
 ### Budget calculator
 
 The budget is worked out by plain arithmetic, never by the AI. The AI only explains the
-result. Every assumption is visible and can be changed, or switched off, under
-**Assumptions** in the calculator:
+result. Each crop has its own defaults, and every assumption can be changed or switched
+off under **Assumptions** in the calculator:
 
-| Assumption | Default |
-|---|---|
-| Fertilizer | 2 bags (50kg) per acre, cheapest listing in the county |
-| Seed | KSh 1,500 per acre |
-| Labour | KSh 3,000 per acre |
-| Land preparation | KSh 2,500 per acre |
+| Crop | Usual fertilizer | Bags per acre | Seed per acre | Labour per acre | Land prep per acre |
+|---|---|---|---|---|---|
+| Maize | DAP | 2 | KSh 1,500 | KSh 3,000 | KSh 2,500 |
+| Beans | DAP | 1 | KSh 4,000 | KSh 3,000 | KSh 2,500 |
+| Irish potatoes | DAP | 4 | KSh 30,000 (seed potatoes) | KSh 8,000 | KSh 4,000 |
+| Tomatoes | DAP | 3 | KSh 6,000 | KSh 12,000 | KSh 4,000 |
+| Tea | NPK | 4 | none | KSh 15,000 | none |
+| Sukuma wiki | DAP | 2 | KSh 1,000 | KSh 4,000 | KSh 2,500 |
 
-The fertilizer rate is an illustration, not agronomic advice. The app tells farmers to
-confirm the real rate with a soil test or a local extension officer.
+Two crops carry a note on screen. Tea is budgeted as one season's upkeep of bushes
+that are already planted, so it has no seed or land preparation cost. The tomato
+budget leaves out spraying and staking.
+
+All of these figures are illustrations, not agronomic advice. The app tells farmers to
+confirm real rates with a soil test or a local extension officer.
 
 ## How it works
 
@@ -272,14 +293,17 @@ running when it isn't.
 
 ```bash
 npm test               # everything
-npm run test:server    # 53 backend tests
-npm run test:client    # 18 frontend tests
+npm run test:server    # 85 backend tests
+npm run test:client    # 24 frontend tests
 ```
 
 The tests cover:
 
 - Language and intent detection in English and Kiswahili, including Mary's full question
-- Maize and fertilizer lookups, demo-data labels and timestamps
+- Price lookups for all six crops, their selling units, and fertilizer listings, with demo-data labels and timestamps
+- Each crop's budget defaults, including tea having no planting cost
+- Telling the word "can" apart from CAN fertilizer
+- The on-device copy of the data matching the server's exactly
 - Budget calculation, shortfalls, editable assumptions and invalid input
 - The highlighted key points, including never recommending out-of-stock fertilizer
 - API input checks
@@ -303,9 +327,10 @@ The backend runs on port 4000. All routes start with `/api`.
 | Method | Route | Purpose |
 |---|---|---|
 | GET | `/api/status` | Which AI providers are available |
-| GET | `/api/markets?county=` | Maize prices |
+| GET | `/api/crops` | The six crops with their budget defaults |
+| GET | `/api/markets?crop=&county=` | Crop prices (`crop` is maize, beans, potatoes, tomatoes, tea or kale) |
 | GET | `/api/fertilizer?type=&county=` | Fertilizer listings (`type` is DAP, NPK, UREA or CAN) |
-| POST | `/api/budget` | Budget calculation |
+| POST | `/api/budget` | Budget calculation (`crop` defaults to maize) |
 | POST | `/api/chat` | Ask a question (web channel) |
 | POST | `/api/sms` | Send an SMS: `{ "sessionId", "text" }` |
 | GET | `/api/sms/:sessionId/history` | SMS conversation |
@@ -322,7 +347,7 @@ Example:
 ```bash
 curl -X POST http://localhost:4000/api/budget \
   -H "Content-Type: application/json" \
-  -d '{"county":"Nakuru","farmSizeAcres":1,"budgetKsh":12000,"fertilizerType":"DAP"}'
+  -d '{"crop":"beans","county":"Nakuru","farmSizeAcres":1,"budgetKsh":20000,"fertilizerType":"DAP"}'
 ```
 
 ## Project structure
@@ -330,14 +355,14 @@ curl -X POST http://localhost:4000/api/budget \
 ```
 server/src/
   agent/          language and intent detection, template replies
-  agriculture/    maize prices, fertilizer listings, budget calculator
+  agriculture/    crop prices, fertilizer listings, budget calculator
   api/            Express app and routes
   channels/       web, SMS and USSD adapters over the shared agent
   data/           demo dataset
   database/       SQLite setup, seeding and reset
   offline/        server-side queue for requests sent while offline
   providers/      hosted AI, Ollama and template providers
-  shared/         shared types and English/Kiswahili text
+  shared/         crop catalogue, shared types, price formatting, English/Kiswahili text
 
 client/src/
   api/            calls to the backend, with offline fallback
@@ -346,6 +371,12 @@ client/src/
   offline/        saved data, message queue, and on-device fallback logic
   styles/         theme and layout
 ```
+
+The web app imports the server's crop catalogue, demo dataset, budget maths and
+question-reading code directly (from `server/src/shared`, `server/src/data`,
+`server/src/agriculture/budgetMath.ts` and `server/src/agent`), rather than keeping its
+own copies. That way the offline answers always match the online ones. None of those
+files touch the database, so no server-only code ends up in the browser.
 
 ## Troubleshooting
 

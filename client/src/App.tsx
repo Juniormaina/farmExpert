@@ -6,7 +6,7 @@ import { ChatPanel } from "./components/ChatPanel";
 import { MarketCards } from "./components/MarketCards";
 import { FertilizerCards } from "./components/FertilizerCards";
 import { BudgetCalculatorPanel } from "./components/BudgetCalculatorPanel";
-import { CountySwitch } from "./components/CountySwitch";
+import { PriceFilters } from "./components/PriceFilters";
 import { SmsSimulator } from "./components/SmsSimulator";
 import { UssdSimulator } from "./components/UssdSimulator";
 
@@ -31,11 +31,13 @@ function Dashboard() {
             {channel === "ussd" && <UssdSimulator key={`ussd-${demoResetKey}`} />}
           </div>
           <div className={dataColumnClass}>
-            <CountySwitch />
+            <PriceFilters />
             <MarketCards />
             <FertilizerCards />
-            <BudgetCalculatorPanel key={`budget-${demoResetKey}`} />
           </div>
+        </div>
+        <div className={channel === "web" ? "layout-wide" : "layout-wide desktop-only"}>
+          <BudgetCalculatorPanel key={`budget-${demoResetKey}`} />
         </div>
       </main>
     </>

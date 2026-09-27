@@ -1,6 +1,7 @@
 import type {
   AgentResponse,
   BudgetAssumptions,
+  CropId,
   DemoProfile,
   FertilizerListing,
   FertilizerType,
@@ -81,8 +82,10 @@ export async function getStatus(): Promise<Sourced<SystemStatus>> {
 
 // Both lookups fetch and cache the full dataset, then filter on the device, so
 // the offline cache covers every county rather than only the last one viewed.
-export async function getMarkets(county?: string): Promise<Sourced<MarketPrice[]>> {
-  const filter = (prices: MarketPrice[]) => (county ? prices.filter((p) => p.county === county) : prices);
+export async function getMarkets(filterBy: { crop?: CropId; county?: string } = {}): Promise<Sourced<MarketPrice[]>> {
+  const { crop, county } = filterBy;
+  const filter = (prices: MarketPrice[]) =>
+    prices.filter((p) => (!crop || p.crop === crop) && (!county || p.county === county));
   try {
     const res = await fetchJson<{ prices: MarketPrice[] }>("/api/markets");
     cacheMarketPrices(res.prices);
@@ -110,6 +113,7 @@ export async function getFertilizer(type?: FertilizerType, county?: string): Pro
 
 export async function calculateBudget(input: {
   county: string;
+  crop: CropId;
   farmSizeAcres: number;
   budgetKsh: number;
   fertilizerType: FertilizerType;

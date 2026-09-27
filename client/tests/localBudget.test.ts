@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { calculateBudgetLocally, DEFAULT_ASSUMPTIONS } from "../src/offline/localBudget";
+import { calculateBudgetLocally } from "../src/offline/localBudget";
+import { getCrop } from "../../server/src/shared/crops";
 
 describe("calculateBudgetLocally (offline mirror of the server calculator)", () => {
-  const marysInput = { county: "Nakuru", farmSizeAcres: 1, budgetKsh: 12000, fertilizerType: "DAP" as const };
+  const marysInput = { county: "Nakuru", crop: "maize" as const, farmSizeAcres: 1, budgetKsh: 12000, fertilizerType: "DAP" as const };
 
   it("matches the server's default assumptions and totals for Mary's scenario", () => {
     const result = calculateBudgetLocally(marysInput);
-    expect(result.fertilizerBagsNeeded).toBe(Math.ceil(1 * DEFAULT_ASSUMPTIONS.fertilizerBagsPerAcre));
+    expect(result.fertilizerBagsNeeded).toBe(Math.ceil(1 * getCrop("maize").budgetDefaults.fertilizerBagsPerAcre));
     expect(result.totalEstimatedCostKsh).toBe(result.lineItems.reduce((sum, i) => sum + i.amountKsh, 0));
     expect(result.remainingBudgetKsh).toBe(marysInput.budgetKsh - result.totalEstimatedCostKsh);
     expect(result.isShortfall).toBe(result.remainingBudgetKsh < 0);

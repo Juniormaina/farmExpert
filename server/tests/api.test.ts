@@ -25,6 +25,26 @@ describe("GET /api/markets", () => {
     expect(res.body.prices.length).toBeGreaterThan(0);
     expect(res.body.counties).toContain("Nakuru");
   });
+
+  it("filters by crop", async () => {
+    const res = await request(app).get("/api/markets").query({ crop: "tea" });
+    expect(res.status).toBe(200);
+    expect(res.body.prices.length).toBeGreaterThan(0);
+    expect(res.body.prices.every((p: { crop: string }) => p.crop === "tea")).toBe(true);
+  });
+
+  it("rejects an unknown crop", async () => {
+    const res = await request(app).get("/api/markets").query({ crop: "bananas" });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/crops", () => {
+  it("lists all six crops with their budget defaults", async () => {
+    const res = await request(app).get("/api/crops");
+    expect(res.body.crops.map((c: { id: string }) => c.id)).toEqual(["maize", "beans", "potatoes", "tomatoes", "tea", "kale"]);
+    expect(res.body.crops[4]).toMatchObject({ id: "tea", defaultFertilizer: "NPK" });
+  });
 });
 
 describe("GET /api/fertilizer", () => {
@@ -60,6 +80,21 @@ describe("POST /api/budget", () => {
     const res = await request(app)
       .post("/api/budget")
       .send({ county: "Nakuru", farmSizeAcres: -1, budgetKsh: 12000, fertilizerType: "DAP" });
+    expect(res.status).toBe(400);
+  });
+
+  it("budgets for a chosen crop", async () => {
+    const res = await request(app)
+      .post("/api/budget")
+      .send({ crop: "beans", county: "Nakuru", farmSizeAcres: 1, budgetKsh: 12000, fertilizerType: "DAP" });
+    expect(res.status).toBe(200);
+    expect(res.body.totalEstimatedCostKsh).toBe(16000);
+  });
+
+  it("rejects an unknown crop in a budget", async () => {
+    const res = await request(app)
+      .post("/api/budget")
+      .send({ crop: "bananas", county: "Nakuru", farmSizeAcres: 1, budgetKsh: 12000, fertilizerType: "DAP" });
     expect(res.status).toBe(400);
   });
 
@@ -110,6 +145,23 @@ describe("POST /api/chat", () => {
     expect(res.body.providerUsed).toBe("deterministic");
   });
 
+  it("answers about tomatoes with tomato prices, not maize", async () => {
+    const res = await request(app).post("/api/chat").send({ message: "Tomato prices in Eldoret?" });
+    expect(res.body.intent).toBe("crop_price");
+    expect(res.body.data.marketPrices.length).toBeGreaterThan(0);
+    expect(res.body.data.marketPrices.every((p: { crop: string }) => p.crop === "tomatoes")).toBe(true);
+    expect(res.body.reply).toContain("Tomatoes prices:");
+    expect(res.body.reply).toContain("per 64kg crate");
+  });
+
+  it("plans a beans budget from a chat question, using DAP by default", async () => {
+    const res = await request(app)
+      .post("/api/chat")
+      .send({ message: "How can I plan? I have KSh 20,000 for 1 acre of beans in Nakuru" });
+    expect(res.body.data.budget.input).toMatchObject({ crop: "beans", fertilizerType: "DAP" });
+    expect(res.body.data.budget.totalEstimatedCostKsh).toBe(16000);
+  });
+
   it("rejects an empty message", async () => {
     const res = await request(app).post("/api/chat").send({ message: "" });
     expect(res.status).toBe(400);
@@ -136,42 +188,68 @@ describe("POST /api/sms", () => {
   });
 });
 
+async function ussd(sessionId: string, inputs: string[], locale = "en") {
+  await request(app).post("/api/ussd/start").send({ sessionId, locale });
+  let last = { text: "", done: false };
+  for (const input of inputs) {
+    last = (await request(app).post(`/api/ussd/${sessionId}/input`).send({ input })).body;
+  }
+  return last;
+}
+
 describe("USSD flow", () => {
-  it("navigates the maize price menu end to end", async () => {
-    const sessionId = "ussd-test-1";
-    const start = await request(app).post("/api/ussd/start").send({ sessionId, locale: "en" });
-    expect(start.body.text).toContain("WELCOME");
+  it("navigates crop, then county, to maize prices", async () => {
+    const start = await request(app).post("/api/ussd/start").send({ sessionId: "ussd-test-1", locale: "en" });
+    expect(start.body.text).toContain("1. Crop prices");
 
-    const menu = await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "1" });
-    expect(menu.body.text).toContain("Select county");
+    const crops = await request(app).post("/api/ussd/ussd-test-1/input").send({ input: "1" });
+    expect(crops.body.text).toContain("Select crop");
+    expect(crops.body.text).toContain("Tomatoes");
 
-    const result = await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "1" });
-    expect(result.body.text).toContain("Nakuru");
+    const counties = await request(app).post("/api/ussd/ussd-test-1/input").send({ input: "1" });
+    expect(counties.body.text).toContain("3. Kericho");
+
+    const result = await request(app).post("/api/ussd/ussd-test-1/input").send({ input: "1" });
+    expect(result.body.text).toContain("Maize prices - Nakuru");
+    expect(result.body.text).toContain("KSh 3,200 / 90kg bag");
     expect(result.body.done).toBe(false);
   });
 
-  it("supports going back and exiting", async () => {
-    const sessionId = "ussd-test-2";
-    await request(app).post("/api/ussd/start").send({ sessionId, locale: "en" });
-    const toMaize = await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "1" });
-    expect(toMaize.body.text).toContain("Select county");
-
-    const back = await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "0" });
-    expect(back.body.text).toContain("WELCOME");
-
-    const exit = await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "5" });
-    expect(exit.body.done).toBe(true);
+  it("shows tomato prices per crate", async () => {
+    const result = await ussd("ussd-test-tomato", ["1", "4", "2"]);
+    expect(result.text).toContain("Tomatoes prices - Eldoret");
+    expect(result.text).toContain("KSh 5,000 / 64kg crate");
   });
 
-  it("completes the full budget planning flow", async () => {
-    const sessionId = "ussd-test-3";
-    await request(app).post("/api/ussd/start").send({ sessionId, locale: "en" });
-    await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "3" }); // budget
-    await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "1" }); // Nakuru
-    await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "1" }); // 1 acre
-    await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "12000" }); // budget
-    const result = await request(app).post(`/api/ussd/${sessionId}/input`).send({ input: "1" }); // DAP
-    expect(result.body.text).toContain("Budget Plan");
-    expect(result.body.text).toContain("Total");
+  it("says so when a crop has no prices in a county", async () => {
+    const result = await ussd("ussd-test-empty", ["1", "5", "1"]);
+    expect(result.text).toContain("No prices for this crop here yet");
+  });
+
+  it("supports going back and exiting", async () => {
+    const back = await ussd("ussd-test-2", ["1", "0"]);
+    expect(back.text).toContain("WELCOME");
+    const exit = await ussd("ussd-test-2b", ["5"]);
+    expect(exit.done).toBe(true);
+  });
+
+  it("completes the full maize budget flow", async () => {
+    const result = await ussd("ussd-test-3", ["3", "1", "1", "1", "12000", "1"]);
+    expect(result.text).toContain("Budget Plan: Maize");
+    expect(result.text).toContain("Total: KSh 20,000");
+    expect(result.text).toContain("Shortfall: KSh 8,000");
+  });
+
+  it("plans a tea budget in Kericho and suggests NPK", async () => {
+    const fertMenu = await ussd("ussd-test-tea", ["3", "5", "3", "1", "40000"]);
+    expect(fertMenu.text).toContain("Usual for Tea: NPK");
+    const result = (await request(app).post("/api/ussd/ussd-test-tea/input").send({ input: "2" })).body;
+    expect(result.text).toContain("Total: KSh 37,800");
+    expect(result.text).toContain("Remaining: KSh 2,200");
+  });
+
+  it("works in Kiswahili", async () => {
+    const result = await ussd("ussd-test-sw", ["1", "2", "1"], "sw");
+    expect(result.text).toContain("Bei za maharagwe - Nakuru");
   });
 });

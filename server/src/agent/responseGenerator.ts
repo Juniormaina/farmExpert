@@ -1,12 +1,15 @@
 import type {
   AgentIntent,
   BudgetResult,
+  CropId,
   ExtractedEntities,
   FertilizerListing,
   Locale,
   MarketPrice
 } from "../shared/types.js";
 import { DEMO_DATA_NOTICE, UI_STRINGS } from "../shared/i18n.js";
+import { COUNTIES } from "../shared/crops.js";
+import { cropName, formatUnitPriceLong } from "../shared/format.js";
 
 export interface ResponseData {
   marketPrices?: MarketPrice[];
@@ -20,16 +23,19 @@ const MISSING_FIELD_LABELS: Record<Locale, Record<string, string>> = {
   sw: { county: "eneo/county (mfano Nakuru)", farmSizeAcres: "ukubwa wa shamba kwa ekari", budgetKsh: "bajeti kwa shilingi" }
 };
 
-function formatMarketPrices(prices: MarketPrice[], locale: Locale): string {
+function formatMarketPrices(prices: MarketPrice[], crop: CropId, county: string | undefined, locale: Locale): string {
+  const name = cropName(crop, locale);
   if (prices.length === 0) {
-    return locale === "sw" ? "Sina bei za mahindi kwa eneo hilo kwa sasa." : "I don't have maize prices for that area yet.";
+    const where = county ? COUNTIES.find((c) => c.value === county)?.label ?? county : undefined;
+    if (locale === "sw") {
+      return where
+        ? `Sina bei za ${name.toLowerCase()} kwa ${where} kwenye taarifa za mfano.`
+        : `Sina bei za ${name.toLowerCase()} kwa sasa.`;
+    }
+    return where ? `I don't have ${name.toLowerCase()} prices for ${where} in the demo data.` : `I don't have ${name.toLowerCase()} prices yet.`;
   }
-  const lines = prices.map((p) =>
-    locale === "sw"
-      ? `- ${p.market} (${p.county}): KSh ${p.pricePerBag.toLocaleString()} kwa mfuko wa ${p.bagSizeKg}kg (${p.classification})`
-      : `- ${p.market} (${p.county}): KSh ${p.pricePerBag.toLocaleString()} per ${p.bagSizeKg}kg bag (${p.classification})`
-  );
-  const header = locale === "sw" ? "Bei za mahindi:" : "Maize prices:";
+  const lines = prices.map((p) => `- ${p.market} (${p.county}): ${formatUnitPriceLong(p, locale)} (${p.classification})`);
+  const header = locale === "sw" ? `Bei za ${name.toLowerCase()}:` : `${name} prices:`;
   return [header, ...lines].join("\n");
 }
 
@@ -84,8 +90,8 @@ export function buildDeterministicReply(
   if (intents.includes("help")) {
     sections.push(UI_STRINGS[locale].help);
   }
-  if (intents.includes("maize_price") && data.marketPrices) {
-    sections.push(formatMarketPrices(data.marketPrices, locale));
+  if (intents.includes("crop_price") && data.marketPrices && entities.crop) {
+    sections.push(formatMarketPrices(data.marketPrices, entities.crop, entities.county, locale));
   }
   if ((intents.includes("fertilizer_price") || intents.includes("fertilizer_availability")) && data.fertilizerListings) {
     sections.push(formatFertilizerListings(data.fertilizerListings, locale));

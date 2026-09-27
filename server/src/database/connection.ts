@@ -22,15 +22,28 @@ if (!fs.existsSync(DATA_DIR)) {
 export const db = new DatabaseSync(DB_PATH);
 db.exec("PRAGMA journal_mode = WAL;");
 
+function columnNames(table: string): string[] {
+  const rows = db.prepare(`PRAGMA table_info(${table})`).all() as unknown as Array<{ name: string }>;
+  return rows.map((r) => r.name);
+}
+
 export function initSchema(): void {
+  // Databases created before multi-crop support store maize bags only. The
+  // table holds nothing but reseedable demo data, so rebuild it.
+  const existing = columnNames("market_prices");
+  if (existing.length > 0 && !existing.includes("unit")) {
+    db.exec("DROP TABLE market_prices");
+  }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS market_prices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       market TEXT NOT NULL,
       county TEXT NOT NULL,
       crop TEXT NOT NULL,
-      price_per_bag INTEGER NOT NULL,
-      bag_size_kg INTEGER NOT NULL,
+      price_per_unit INTEGER NOT NULL,
+      unit TEXT NOT NULL,
+      unit_kg INTEGER NOT NULL,
       classification TEXT NOT NULL,
       source TEXT NOT NULL,
       last_updated TEXT NOT NULL,

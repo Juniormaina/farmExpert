@@ -1,12 +1,13 @@
 import { db } from "../database/connection.js";
-import type { MarketPrice } from "../shared/types.js";
+import type { CropId, MarketPrice } from "../shared/types.js";
 
 interface MarketRow {
   market: string;
   county: string;
   crop: string;
-  price_per_bag: number;
-  bag_size_kg: number;
+  price_per_unit: number;
+  unit: string;
+  unit_kg: number;
   classification: string;
   source: string;
   last_updated: string;
@@ -17,9 +18,10 @@ function rowToMarketPrice(row: MarketRow): MarketPrice {
   return {
     market: row.market,
     county: row.county,
-    crop: "maize",
-    pricePerBag: row.price_per_bag,
-    bagSizeKg: row.bag_size_kg,
+    crop: row.crop as CropId,
+    pricePerUnit: row.price_per_unit,
+    unit: row.unit as MarketPrice["unit"],
+    unitKg: row.unit_kg,
     classification: row.classification as MarketPrice["classification"],
     source: row.source,
     lastUpdated: row.last_updated,
@@ -28,10 +30,14 @@ function rowToMarketPrice(row: MarketRow): MarketPrice {
   };
 }
 
-export function getMaizePrices(filter: { county?: string; market?: string } = {}): MarketPrice[] {
-  let query = "SELECT * FROM market_prices WHERE crop = 'maize'";
+export function getCropPrices(filter: { crop?: CropId; county?: string; market?: string } = {}): MarketPrice[] {
+  let query = "SELECT * FROM market_prices WHERE 1=1";
   const params: string[] = [];
 
+  if (filter.crop) {
+    query += " AND crop = ?";
+    params.push(filter.crop);
+  }
   if (filter.county) {
     query += " AND county LIKE ?";
     params.push(`%${filter.county}%`);
@@ -40,7 +46,7 @@ export function getMaizePrices(filter: { county?: string; market?: string } = {}
     query += " AND market LIKE ?";
     params.push(`%${filter.market}%`);
   }
-  query += " ORDER BY county, market";
+  query += " ORDER BY county, crop, market";
 
   const rows = db.prepare(query).all(...params) as unknown as MarketRow[];
   return rows.map(rowToMarketPrice);

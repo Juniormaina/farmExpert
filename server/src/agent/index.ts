@@ -1,20 +1,22 @@
 import type { AgentRequest, AgentResponse } from "../shared/types.js";
 import { detectIntent } from "./intentDetector.js";
 import { buildDeterministicReply, type ResponseData } from "./responseGenerator.js";
-import { getMaizePrices } from "../agriculture/marketService.js";
+import { getCropPrices } from "../agriculture/marketService.js";
 import { getFertilizerListings } from "../agriculture/fertilizerService.js";
 import { calculateBudget, FertilizerUnavailableError } from "../agriculture/budgetCalculator.js";
 import { generateReply } from "../providers/providerManager.js";
+import { getCrop } from "../shared/crops.js";
 
-const DEFAULT_BUDGET_FERTILIZER = "DAP" as const;
+// A budget question that names no crop is about maize, the most common crop.
+const DEFAULT_BUDGET_CROP = "maize" as const;
 
 export async function handleAgentMessage(request: AgentRequest): Promise<AgentResponse> {
   const { intents, primaryIntent, entities, locale } = detectIntent(request.message, request.locale);
 
   const data: ResponseData = {};
 
-  if (intents.includes("maize_price")) {
-    data.marketPrices = getMaizePrices({ county: entities.county });
+  if (intents.includes("crop_price") && entities.crop) {
+    data.marketPrices = getCropPrices({ crop: entities.crop, county: entities.county });
   }
 
   if (intents.includes("fertilizer_price") || intents.includes("fertilizer_availability")) {
@@ -30,14 +32,15 @@ export async function handleAgentMessage(request: AgentRequest): Promise<AgentRe
     if (missing.length > 0) {
       data.missingForBudget = missing;
     } else {
+      const crop = entities.crop ?? DEFAULT_BUDGET_CROP;
       try {
         data.budget = calculateBudget(
           {
             county: entities.county!,
-            crop: "maize",
+            crop,
             farmSizeAcres: entities.farmSizeAcres!,
             budgetKsh: entities.budgetKsh!,
-            fertilizerType: entities.fertilizerType ?? DEFAULT_BUDGET_FERTILIZER
+            fertilizerType: entities.fertilizerType ?? getCrop(crop).defaultFertilizer
           },
           locale
         );

@@ -517,12 +517,22 @@ input, select, textarea {
 }
 
 /* Suggestion chips */
+/* One row that scrolls sideways at every size, so the suggestions never push
+   the message box down the screen. */
 .suggestions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
   align-items: center;
   gap: 6px;
   margin-bottom: 10px;
+  padding-bottom: 4px;
+}
+
+.suggestions .chip,
+.suggestions-label {
+  flex-shrink: 0;
 }
 
 .suggestions-label {
@@ -543,6 +553,11 @@ input, select, textarea {
   transition: background 0.15s, color 0.15s;
 }
 
+.chip-featured {
+  background: var(--color-maize-500);
+  border-color: var(--color-maize-700);
+}
+
 .chip:hover:not(:disabled) {
   background: var(--color-green-700);
   color: var(--color-white);
@@ -553,20 +568,45 @@ input, select, textarea {
   cursor: not-allowed;
 }
 
-/* County switch */
-.county-switch {
+/* Crop and county filters */
+.price-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.filter-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 
-.county-switch-label {
+.filter-label {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-neutral-700);
-  margin-right: 4px;
+  min-width: 52px;
+}
+
+.empty-state {
+  background: var(--color-neutral-50);
+  border: 1px dashed var(--color-neutral-300);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  color: var(--color-neutral-700);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.budget-note {
+  font-size: 0.82rem;
+  background: #fdf6dc;
+  border-left: 4px solid var(--color-maize-500);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0 0 12px;
 }
 
 .segment {
@@ -845,8 +885,34 @@ input, select, textarea {
     font-size: 1rem;
   }
 
+  /* Both columns end at the same line: the chat (or phone) card stretches to
+     match the price cards beside it, so the page scrolls as one piece. */
   .layout {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: stretch;
+  }
+
+  .layout > .layout-channel,
+  .layout > .layout-data {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .layout-channel > .card:last-child,
+  .layout-data > .card:last-child {
+    flex: 1;
+  }
+
+  .layout-channel > .card:last-child {
+    display: flex;
+    flex-direction: column;
+  }
+
+
+  .budget-body {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 28px;
     align-items: start;
   }
 
@@ -858,33 +924,19 @@ input, select, textarea {
     display: block;
   }
 
+  /* Fills whatever height the row gives it. "contain: size" stops a long
+     conversation from making the row taller; the chat scrolls inside instead. */
   .chat-window-main {
+    flex: 1 1 0;
     max-height: none;
-    height: clamp(170px, calc(100vh - 600px), 520px);
+    min-height: 280px;
+    contain: size;
   }
 
-  .suggestions {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    padding-bottom: 4px;
-  }
-
-  .suggestions .chip,
-  .suggestions-label {
-    flex-shrink: 0;
-  }
 }
 
 /* Keep the chat or phone in view while scrolling the price cards, but only
    when the window is tall enough to show all of it. */
-@media (min-width: 1024px) and (min-height: 760px) {
-  .layout-channel {
-    position: sticky;
-    top: 16px;
-  }
-}
-
 @media (max-width: 480px) {
   .agent-turn { max-width: 100%; }
   .key-point { padding: 6px 8px; }

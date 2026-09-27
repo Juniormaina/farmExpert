@@ -3,7 +3,8 @@ import type { FertilizerType, Locale } from "../shared/types.js";
 import { handleWebMessage } from "../channels/webChannel.js";
 import { handleSmsMessage, getSmsHistory, resetSmsHistory } from "../channels/smsChannel.js";
 import { startUssdSession, stepUssdSession } from "../channels/ussdChannel.js";
-import { getMaizePrices, listCounties } from "../agriculture/marketService.js";
+import { getCropPrices, listCounties } from "../agriculture/marketService.js";
+import { CROPS, CROP_IDS, isCropId } from "../shared/crops.js";
 import { getFertilizerListings, FERTILIZER_TYPES } from "../agriculture/fertilizerService.js";
 import { calculateBudget, FertilizerUnavailableError } from "../agriculture/budgetCalculator.js";
 import { getSystemStatus } from "../providers/providerManager.js";
@@ -36,9 +37,17 @@ router.post("/demo/reset", (_req, res) => {
   res.json({ ok: true, message: "Demo data reset." });
 });
 
+router.get("/crops", (_req, res) => {
+  res.json({ crops: CROPS.map(({ id, name, defaultFertilizer, budgetDefaults }) => ({ id, name, defaultFertilizer, budgetDefaults })) });
+});
+
 router.get("/markets", (req, res) => {
   const county = typeof req.query.county === "string" ? req.query.county : undefined;
-  res.json({ counties: listCounties(), prices: getMaizePrices({ county }) });
+  const crop = req.query.crop;
+  if (crop !== undefined && !isCropId(crop)) {
+    return res.status(400).json({ error: `Invalid crop. Must be one of ${CROP_IDS.join(", ")}` });
+  }
+  res.json({ counties: listCounties(), prices: getCropPrices({ crop, county }) });
 });
 
 router.get("/fertilizer", (req, res) => {
@@ -73,7 +82,10 @@ function assumptionsError(assumptions: unknown): string | undefined {
 }
 
 router.post("/budget", (req, res) => {
-  const { county, farmSizeAcres, budgetKsh, fertilizerType, assumptions, locale } = req.body ?? {};
+  const { county, farmSizeAcres, budgetKsh, fertilizerType, assumptions, locale, crop = "maize" } = req.body ?? {};
+  if (!isCropId(crop)) {
+    return res.status(400).json({ error: `crop must be one of ${CROP_IDS.join(", ")}` });
+  }
   const invalidAssumptions = assumptionsError(assumptions);
   if (invalidAssumptions) {
     return res.status(400).json({ error: invalidAssumptions });
@@ -95,7 +107,7 @@ router.post("/budget", (req, res) => {
 
   try {
     const result = calculateBudget(
-      { county, crop: "maize", farmSizeAcres, budgetKsh, fertilizerType, assumptions },
+      { county, crop, farmSizeAcres, budgetKsh, fertilizerType, assumptions },
       effectiveLocale
     );
     res.json(result);
