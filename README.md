@@ -1,0 +1,390 @@
+# ShambaAI
+
+**Farming decisions, made simpler.**
+
+ShambaAI is an offline-first AI agent that helps Kenyan smallholder farmers check maize
+prices, compare fertilizer costs, and plan a planting budget. One agent serves three
+channels, so the same answers reach a farmer on a smartphone, a basic phone that can
+send SMS, or a feature phone that can only dial a USSD menu. It keeps working when the
+internet connection is poor or gone.
+
+<p align="center">
+  <img src="docs/screenshots/web.png" alt="ShambaAI web dashboard" width="30%" />
+  <img src="docs/screenshots/chat.png" alt="Chat answering a Kiswahili question" width="30%" />
+  <img src="docs/screenshots/ussd.png" alt="USSD simulator showing a budget plan" width="30%" />
+</p>
+
+> **All prices, suppliers and stock levels in this project are demo data.** They are
+> illustrative, clearly labeled as such everywhere they appear, and are not live market
+> quotes. The SMS and USSD screens are simulators, not a real telecom connection.
+
+## Contents
+
+- [The problem](#the-problem)
+- [The demo farmer](#the-demo-farmer)
+- [Quick start](#quick-start)
+- [Running the demo](#running-the-demo)
+- [Features](#features)
+- [How it works](#how-it-works)
+- [AI providers](#ai-providers)
+- [Working offline](#working-offline)
+- [Testing](#testing)
+- [API reference](#api-reference)
+- [Project structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Limitations](#limitations)
+
+## The problem
+
+Most AI tools assume a modern smartphone, reliable internet and a data bundle. Many
+smallholder farmers in Kenya have none of those consistently, yet they still need to
+know what maize is selling for, what fertilizer costs, and whether their budget covers
+the season.
+
+ShambaAI adapts to the farmer's technology instead of asking the farmer to adapt. The
+same agent answers through a web app, SMS and USSD, and the core features keep working
+without a connection.
+
+## The demo farmer
+
+The demo is built around one fictional farmer:
+
+| | |
+|---|---|
+| **Name** | Mary Wanjiku |
+| **Location** | Nakuru County |
+| **Farm** | 1 acre of maize |
+| **Budget** | KSh 12,000 |
+
+Mary asks a mixed Kiswahili and English question, the way many farmers actually write:
+
+> Habari, nataka kupanda mahindi kwa ekari moja Nakuru. Bei ya mbolea ni ngapi, na
+> mahindi yanauzwa bei gani sokoni? Nina budget ya shilingi 12,000. Naweza kupanga aje?
+
+*(Hello, I want to plant maize on one acre in Nakuru. How much is fertilizer, and what
+does maize sell for at the market? I have a budget of 12,000 shillings. How can I plan?)*
+
+ShambaAI recognises the language, picks out the county, farm size and budget, looks up
+maize and fertilizer prices, calculates the budget, and replies in Kiswahili. For Mary
+the plan comes to KSh 20,000 with DAP fertilizer, so it tells her she is KSh 8,000
+short.
+
+## Quick start
+
+**Requirements:** Node.js 22 or newer, and npm.
+
+```bash
+npm install
+```
+
+Start the backend and the frontend in two terminals:
+
+```bash
+npm run dev:server    # API on http://localhost:4000
+npm run dev:client    # Web app on http://localhost:5173
+```
+
+Open **http://localhost:5173**. That's all you need: no API keys, no database server
+and no internet connection. Without an AI provider configured, ShambaAI answers from
+its built-in templates, which contain the same numbers.
+
+To turn on AI-written replies, copy the example settings file and fill it in (see
+[AI providers](#ai-providers)):
+
+```bash
+cp server/.env.example server/.env
+```
+
+## Running the demo
+
+The full demo takes about 90 seconds.
+
+| Time | Step |
+|---|---|
+| 0 to 15s | Explain the problem: AI tools assume a smartphone and good internet. |
+| 15 to 35s | Click **Start Demo**. Mary's question is sent and the reply shows maize prices, fertilizer prices and her budget plan. |
+| 35 to 50s | Open the **SMS** tab and send `Bei ya mbolea Nakuru?`. The same agent answers in a short text message. |
+| 50 to 65s | Open the **USSD** tab. Choose `3` (Plan budget), `1` (Nakuru), `1` (acre), `12000`, `1` (DAP) to get the same budget on a feature phone menu. |
+| 65 to 80s | Turn off the network and reload. The status changes to *Offline: cached data available* and prices, chat and the budget calculator keep working. |
+| 80 to 90s | Wrap up: one agent, three channels, adapting to the farmer's device and connection. |
+
+**Reset Demo** clears the chat, SMS history and budget form and reloads the demo data,
+ready for the next run.
+
+**For the offline step, use the production build.** The part that lets the page reload
+with no connection (the service worker) only runs in the production build:
+
+```bash
+npm run preview:client   # builds, then serves on http://localhost:4173
+```
+
+Keep `npm run dev:server` running, open http://localhost:4173 once while online so the
+app can save itself, then turn off the network and reload.
+
+## Features
+
+### Three channels, one agent
+
+- **Web app.** A mobile-first dashboard with chat, maize price cards, fertilizer
+  comparison cards, a budget calculator, a connection status indicator and an
+  English/Kiswahili switch.
+- **SMS simulator.** A phone-style messaging screen. Replies are kept to 320
+  characters and always start with the demo-data label, so a long reply can never cut
+  it off.
+- **USSD simulator.** A feature-phone menu with numbered options, back (`0`), exit
+  (`5`), input checks, and English/Kiswahili menus.
+
+All three call the same agent and the same price and budget services. There is no
+separate logic per channel apart from the USSD menu steps and the SMS length limit.
+
+### Key points at a glance
+
+- Every chat answer opens with highlighted key points: the highest maize price, the
+  cheapest fertilizer that is actually in stock, the estimated cost, and whether the
+  budget is short (red) or has money left (green). These come from the calculated
+  data, never from the AI's wording, so they are always the correct figures.
+- Prices inside replies are highlighted so they stand out from the text.
+- Price cards flag the **Best price** for maize and the **Cheapest in stock**
+  fertilizer. Out-of-stock fertilizer is dimmed and never recommended.
+
+### Interactive
+
+- Tap-to-ask suggestion buttons under the chat, in English or Kiswahili.
+- A "working it out" indicator while an answer is on its way.
+- A **Nakuru / Eldoret** switch for the price cards. Asking about a county in chat
+  switches the cards and the calculator to that county automatically.
+- The budget calculator updates as you type, with a large *Short by* or *Left over*
+  figure, a bar showing how much of the cost the budget covers, and the biggest cost
+  highlighted.
+
+### Language
+
+- The page opens in English. The **EN / SW** switch changes the page language.
+- Replies follow the language of the question, not the page. A Kiswahili question gets
+  a Kiswahili answer and an English question gets an English one.
+- Kiswahili number words are understood, so *ekari moja* is read as 1 acre.
+
+### Market and fertilizer data
+
+- Maize prices for Nakuru and Eldoret (Uasin Gishu), with market, bag size, and
+  wholesale, retail or farm-gate type.
+- DAP, NPK, Urea and CAN prices from fictional suppliers, with stock status (in stock,
+  low stock, out of stock).
+- Every price shows its source, a timestamp, and a demo-data label.
+
+### Budget calculator
+
+The budget is worked out by plain arithmetic, never by the AI. The AI only explains the
+result. Every assumption is visible and can be changed, or switched off, under
+**Assumptions** in the calculator:
+
+| Assumption | Default |
+|---|---|
+| Fertilizer | 2 bags (50kg) per acre, cheapest listing in the county |
+| Seed | KSh 1,500 per acre |
+| Labour | KSh 3,000 per acre |
+| Land preparation | KSh 2,500 per acre |
+
+The fertilizer rate is an illustration, not agronomic advice. The app tells farmers to
+confirm the real rate with a soil test or a local extension officer.
+
+## How it works
+
+```
+   Web app          SMS simulator        USSD simulator
+      \                   |                    /
+       \                  |                   /
+        +------------ Express API ------------+
+                          |
+                    Agent (shared)
+         1. detect language and intent
+         2. extract county, acres, budget, fertilizer
+         3. look up prices           ---> SQLite demo data
+         4. calculate the budget     ---> plain arithmetic
+         5. build a template reply   (always correct)
+         6. ask an AI to reword it   (optional, checked)
+```
+
+Step 6 is optional. If an AI provider is configured, it is asked to reword the template
+reply in a friendlier way without changing any facts. If the AI changes or drops a
+number, answers too slowly, or isn't available, the template reply is sent instead. The
+farmer always gets correct numbers.
+
+The database is SQLite, stored in a single file at `server/data/shambaai.db` and
+created automatically on first start. No database server or cloud database is needed.
+
+## AI providers
+
+ShambaAI tries these in order and uses the first one that works:
+
+1. **Hosted model**, if `HOSTED_AI_API_KEY` is set. Works with Anthropic-style and
+   OpenAI-style APIs, including NVIDIA NIM.
+2. **Ollama**, a local model, if it is running at `OLLAMA_HOST`.
+3. **Templates**, which are always available and need nothing.
+
+Settings go in `server/.env`. The main ones:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `4000` | API port |
+| `HOSTED_AI_API_KEY` | *(empty)* | Turns on the hosted model |
+| `API_STYLE` | `anthropic` | `anthropic` or `openai` request format |
+| `HOSTED_AI_BASE_URL` | depends on style | API endpoint |
+| `HOSTED_AI_MODEL` | depends on style | Model name |
+| `OLLAMA_HOST` | `http://localhost:11434` | Local Ollama address |
+| `OLLAMA_MODEL` | `llama3.2` | Local model name |
+| `AI_REPLY_BUDGET_MS` | `10000` | Longest the server waits for AI wording before sending the template reply |
+
+See [server/.env.example](server/.env.example) for the full list and notes on which
+models were tested.
+
+**Keep `AI_REPLY_BUDGET_MS` below 15000.** The web page waits up to 15 seconds for a
+reply. If the server waits longer than that for the AI, the page gives up and shows an
+offline answer even though the server is running. With the default of 10 seconds, long
+questions like Mary's usually get the template reply, and short questions usually get
+the AI-worded one.
+
+API keys stay on the server and are never sent to the browser. `server/.env` is listed
+in `.gitignore` so it is never committed.
+
+## Working offline
+
+| Situation | What the farmer sees |
+|---|---|
+| Server reachable, AI available | AI-worded reply with checked numbers |
+| Server reachable, no AI | Template reply, fully working |
+| No connection, app used before | Last saved prices, labeled *saved on this device* with the time they were saved |
+| No connection, first visit | Sample data built into the app, labeled as such |
+| Message sent with no connection | Answered on the device straight away, then sent to the server automatically when the connection returns |
+
+The status bar at the top always shows the real state:
+
+- *Online: hosted AI available*
+- *Offline: local AI active*
+- *Offline: deterministic fallback*
+- *Offline: cached data available*
+- *Waiting for connectivity*
+
+ShambaAI never shows saved or sample prices as live, and never claims an AI model is
+running when it isn't.
+
+## Testing
+
+```bash
+npm test               # everything
+npm run test:server    # 53 backend tests
+npm run test:client    # 18 frontend tests
+```
+
+The tests cover:
+
+- Language and intent detection in English and Kiswahili, including Mary's full question
+- Maize and fertilizer lookups, demo-data labels and timestamps
+- Budget calculation, shortfalls, editable assumptions and invalid input
+- The highlighted key points, including never recommending out-of-stock fertilizer
+- API input checks
+- USSD menu navigation, going back and exiting
+- SMS history and the demo label surviving the length limit
+- Falling back to templates when the AI is unavailable, too slow, or changes a price
+- The offline message queue and syncing when the connection returns
+- The on-device budget calculator and offline chat replies
+
+To check builds:
+
+```bash
+npm run build:server
+npm run build:client
+```
+
+## API reference
+
+The backend runs on port 4000. All routes start with `/api`.
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/api/status` | Which AI providers are available |
+| GET | `/api/markets?county=` | Maize prices |
+| GET | `/api/fertilizer?type=&county=` | Fertilizer listings (`type` is DAP, NPK, UREA or CAN) |
+| POST | `/api/budget` | Budget calculation |
+| POST | `/api/chat` | Ask a question (web channel) |
+| POST | `/api/sms` | Send an SMS: `{ "sessionId", "text" }` |
+| GET | `/api/sms/:sessionId/history` | SMS conversation |
+| POST | `/api/ussd/start` | Start a USSD session: `{ "sessionId", "locale" }` |
+| POST | `/api/ussd/:sessionId/input` | Send a menu choice: `{ "input" }` |
+| GET | `/api/demo/profile` | Mary's demo profile |
+| POST | `/api/demo/reset` | Reset demo data |
+| GET | `/api/queue/pending` | Queued offline requests |
+| POST | `/api/queue/process` | Process queued requests |
+| GET | `/health` | Health check |
+
+Example:
+
+```bash
+curl -X POST http://localhost:4000/api/budget \
+  -H "Content-Type: application/json" \
+  -d '{"county":"Nakuru","farmSizeAcres":1,"budgetKsh":12000,"fertilizerType":"DAP"}'
+```
+
+## Project structure
+
+```
+server/src/
+  agent/          language and intent detection, template replies
+  agriculture/    maize prices, fertilizer listings, budget calculator
+  api/            Express app and routes
+  channels/       web, SMS and USSD adapters over the shared agent
+  data/           demo dataset
+  database/       SQLite setup, seeding and reset
+  offline/        server-side queue for requests sent while offline
+  providers/      hosted AI, Ollama and template providers
+  shared/         shared types and English/Kiswahili text
+
+client/src/
+  api/            calls to the backend, with offline fallback
+  components/     dashboard, chat, cards, calculator, SMS and USSD simulators
+  context/        language, channel and connection state
+  offline/        saved data, message queue, and on-device fallback logic
+  styles/         theme and layout
+```
+
+## Troubleshooting
+
+**`ExperimentalWarning: SQLite is an experimental feature`**
+Harmless. ShambaAI uses the SQLite support built into Node 22, which still prints this
+warning.
+
+**Why not `better-sqlite3`?**
+It has to be compiled during install, and that fails when the project folder path
+contains a space (such as `offline agent`). Node's built-in SQLite needs no compiling.
+
+**`EADDRINUSE: address already in use :::4000`**
+Another server is already on that port. Stop it with:
+
+```bash
+lsof -ti:4000 -sTCP:LISTEN | xargs -r kill
+```
+
+**Replies say I'm offline but the server is running**
+The server is probably waiting too long for the AI. Make sure `AI_REPLY_BUDGET_MS` in
+`server/.env` is below 15000.
+
+**The page doesn't load when offline**
+Use `npm run preview:client`, not `npm run dev:client`, and open the page once while
+online first.
+
+## Limitations
+
+ShambaAI is a hackathon prototype, not a production service.
+
+- **Demo data only.** No live market, government or supplier data is connected. The
+  data layer is separated so a verified source can be added later.
+- **No real SMS or USSD.** The simulators are not connected to a telecom provider or
+  gateway.
+- **No login or rate limiting.** Add both before putting it on the public internet,
+  especially if a paid AI key is configured.
+- **Open CORS.** The API accepts requests from any website.
+- **Single server.** SQLite is one file on one machine. It works on any host that keeps
+  files between restarts (a VPS, Render, Railway, or Fly.io with a volume), but not on
+  serverless hosts like Vercel, and not across several server copies.
+- **First visit needs a connection.** A browser that has never opened the app online
+  has nothing saved to show offline.
