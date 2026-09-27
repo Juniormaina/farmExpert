@@ -76,13 +76,13 @@ Verified locally before this release:
 
 | Suite | Files | Tests | Result |
 |---|---:|---:|---|
-| Server (`npm run test:server`) | 10 | 94 | All passed |
+| Server (`npm run test:server`) | 10 | 95 | All passed |
 | Client (`npm run test:client`) | 6 | 28 | All passed |
-| **Total** | **16** | **122** | **0 failed** |
+| **Total** | **16** | **123** | **0 failed** |
 
 ```bash
 npm test
-# Vitest results: 94 passed (server)
+# Vitest results: 95 passed (server)
 # Vitest results: 28 passed (client)
 ```
 
@@ -129,7 +129,7 @@ The repo includes `render.yaml`.
 1. In [Render](https://dashboard.render.com), **New → Blueprint**, connect this repo.
 2. Render creates a Node web service that runs:
    - **Build:** `npm install && npm run build`
-   - **Start:** `npm run start:web` (`SERVE_CLIENT=1` serves `client/dist` from Express)
+   - **Start:** `npm start` (serves `client/dist` + `/api`, including PWA `sw.js` / manifest)
 3. Confirm `healthCheckPath` is `/health`.
 4. Optionally set hosted AI secrets in the Render dashboard (`HOSTED_AI_*` or `MODELSCOPE_*`).
 5. SQLite uses `/tmp/smartshambaai.db` on the free plan (ephemeral disk — demo data is reseeded on cold start).
@@ -140,7 +140,7 @@ Manual service (without Blueprint):
 |---|---|
 | Runtime | Node |
 | Build command | `npm install && npm run build` |
-| Start command | `npm run start:web` |
+| Start command | `npm start` |
 | Health check | `/health` |
 
 ## Built with
@@ -152,7 +152,7 @@ Manual service (without Blueprint):
 | Database | SQLite (`node:sqlite`) |
 | Offline | Service worker + on-device agent fallback |
 | AI (optional) | Ollama locally, or hosted OpenAI/Anthropic-compatible APIs |
-| Testing | Vitest — **122 tests passing** |
+| Testing | Vitest — **123 tests passing** |
 | Deploy | Vercel serverless + Render web service |
 
 ## Note

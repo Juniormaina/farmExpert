@@ -21,4 +21,8 @@ const app = createApp();
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`SmartShambaAI server listening on http://localhost:${PORT}`);
+  if (process.env.SERVE_CLIENT === "1" || process.env.NODE_ENV === "production") {
+    // eslint-disable-next-line no-console
+    console.log(`UI expected at http://localhost:${PORT}/ (set SERVE_CLIENT=0 for API-only)`);
+  }
 });

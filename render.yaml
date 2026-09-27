@@ -8,13 +8,15 @@ services:
     plan: free
     region: oregon
     buildCommand: npm install && npm run build
-    startCommand: npm run start:web
+    startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: SERVE_CLIENT
         value: "1"
+      - key: CLIENT_DIST_PATH
+        value: ./client/dist
       - key: SMARTSHAMBAAI_DB_PATH
         value: /tmp/smartshambaai.db
       - key: AI_REPLY_BUDGET_MS

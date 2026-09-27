@@ -18,6 +18,41 @@ describe("GET /", () => {
   });
 });
 
+describe("production static + PWA serving", () => {
+  it("serves the Vite index.html and keeps /api on the Express router", async () => {
+    const path = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+    const clientDist = path.join(root, "client", "dist");
+    const fs = await import("node:fs");
+    if (!fs.existsSync(path.join(clientDist, "index.html"))) {
+      // Build artifacts are required for this check; skip cleanly in CI without dist.
+      return;
+    }
+
+    const spa = createApp({ serveClient: true, clientDistPath: clientDist });
+    const home = await request(spa).get("/");
+    expect(home.status).toBe(200);
+    expect(home.text).toContain('id="root"');
+    expect(home.text).not.toContain("SmartShambaAI API");
+    expect(home.text).toMatch(/manifest\.webmanifest|registerSW\.js|vite-plugin-pwa/);
+
+    const status = await request(spa).get("/api/status");
+    expect(status.status).toBe(200);
+    expect(status.body.activeProvider).toBeDefined();
+
+    if (fs.existsSync(path.join(clientDist, "manifest.webmanifest"))) {
+      const manifest = await request(spa).get("/manifest.webmanifest");
+      expect(manifest.status).toBe(200);
+      expect(manifest.text).toContain("SmartShambaAI");
+    }
+    if (fs.existsSync(path.join(clientDist, "sw.js"))) {
+      const sw = await request(spa).get("/sw.js");
+      expect(sw.status).toBe(200);
+    }
+  });
+});
+
 describe("GET /api/status", () => {
   it("reports deterministic as the active provider when no AI backend is reachable", async () => {
     const res = await request(app).get("/api/status");

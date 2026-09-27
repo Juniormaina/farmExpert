@@ -27,8 +27,10 @@ export default defineConfig({
       // hit looks like a live response to the app, which would label stale
       // prices as live. The app caches API data itself, with timestamps.
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,ico}"],
-        navigateFallbackDenylist: [/^\/api\//]
+        // Include icons/images/manifest so the installable PWA works offline on Render.
+        globPatterns: ["**/*.{js,css,html,svg,ico,png,jpg,jpeg,webp,webmanifest}"],
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/api\//, /^\/health$/]
       }
     })
   ],
