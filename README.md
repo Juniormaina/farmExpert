@@ -68,8 +68,8 @@ Open **http://localhost:5173**. No API keys or internet needed.
 | Backend | Node.js, Express |
 | Database | SQLite |
 | Offline | Progressive Web App (service worker) |
-| AI (optional) | Anthropic, OpenAI-compatible models, or Ollama |
-| Testing | Vitest (109 tests) |
+| AI (optional) | Llama 3.2 running on your own computer (via Ollama), or a hosted model (Anthropic or OpenAI-compatible) |
+| Testing | Vitest (118 tests) |
 
 ## Note
 
