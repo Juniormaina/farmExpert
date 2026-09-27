@@ -2,7 +2,8 @@ import type { AgentResponse, Locale } from "../shared/types.js";
 import { handleAgentMessage } from "../agent/index.js";
 import { DEMO_DATA_NOTICE } from "../shared/i18n.js";
 
-const SMS_MAX_LENGTH = 320;
+// Four SMS parts (4 x 153 characters). Phones join these into one message.
+const SMS_MAX_LENGTH = 612;
 
 const SMS_DEMO_PREFIX: Record<Locale, string> = {
   en: "ShambaAI (DEMO DATA, not live prices): ",

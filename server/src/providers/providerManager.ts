@@ -3,7 +3,7 @@ import type { AIProvider, GenerationContext } from "./types.js";
 import { DeterministicProvider } from "./deterministicProvider.js";
 import { OllamaProvider } from "./ollamaProvider.js";
 import { HostedProvider } from "./hostedProvider.js";
-import { assertReplyIsTrustworthy } from "./replyCheck.js";
+import { assertReplyIsTrustworthy, toPlainText } from "./replyCheck.js";
 
 const deterministic = new DeterministicProvider();
 const ollama = new OllamaProvider();
@@ -80,7 +80,7 @@ export async function generateReply(context: GenerationContext): Promise<Generat
       if (!available) continue;
       const text = await withDeadline(provider.generateReply(context), deadline - Date.now());
       assertReplyIsTrustworthy(text, context.baseReply);
-      return { text, providerUsed: provider.name };
+      return { text: toPlainText(text), providerUsed: provider.name };
     } catch (err) {
       // A rejected reply is a normal outcome (timeout, truncated reasoning,
       // dropped numbers), so fall through to the next provider rather than fail.

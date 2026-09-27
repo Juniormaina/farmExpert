@@ -56,13 +56,12 @@ export async function handleAgentMessage(request: AgentRequest): Promise<AgentRe
 
   const baseReply = buildDeterministicReply(intents, entities, locale, data);
 
-  const { text, providerUsed } = await generateReply({
-    rawMessage: request.message,
-    locale,
-    intents,
-    entities,
-    baseReply
-  });
+  // SMS has a hard length limit on a basic phone, and AI rewording mostly adds
+  // greetings and sign-offs, so SMS gets the short factual reply directly.
+  const { text, providerUsed } =
+    request.channel === "sms"
+      ? { text: baseReply, providerUsed: "deterministic" as const }
+      : await generateReply({ rawMessage: request.message, locale, intents, entities, baseReply });
 
   return {
     reply: text,

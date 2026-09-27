@@ -13,6 +13,17 @@ function normalizeNumbers(text: string): Set<string> {
 
 export class ReplyRejectedError extends Error {}
 
+// Models often answer in markdown, which phones and the chat show as raw
+// symbols. Strip the common forms, keeping the words.
+export function toPlainText(reply: string): string {
+  return reply
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/`([^`]*)`/g, "$1")
+    .trim();
+}
+
 export function assertReplyIsTrustworthy(reply: string, baseReply: string): void {
   if (REASONING_LEAK.test(reply)) {
     throw new ReplyRejectedError("reply leaked the model's reasoning instead of answering");
