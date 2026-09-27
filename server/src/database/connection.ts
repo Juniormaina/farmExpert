@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,11 +14,37 @@ const { DatabaseSync } = nodeRequire("node:sqlite") as typeof import("node:sqlit
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, "../../data");
-const DB_PATH = process.env.SHAMBAAI_DB_PATH ?? path.join(DATA_DIR, "shambaai.db");
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+// Returns whether the directory exists and is writable, creating it if needed.
+// Never throws: a serverless bundle is read-only apart from the temp dir, so a
+// failed mkdir here is a reason to relocate the database, not to crash.
+function ensureWritableDir(dir: string): boolean {
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.accessSync(dir, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }
+
+function resolveDbPath(): string {
+  const configured = process.env.SHAMBAAI_DB_PATH;
+  if (configured) {
+    ensureWritableDir(path.dirname(path.resolve(configured)));
+    return configured;
+  }
+  if (ensureWritableDir(DATA_DIR)) {
+    return path.join(DATA_DIR, "shambaai.db");
+  }
+  const fallback = path.join(os.tmpdir(), "shambaai.db");
+  ensureWritableDir(path.dirname(fallback));
+  return fallback;
+}
+
+const DB_PATH = resolveDbPath();
 
 export const db = new DatabaseSync(DB_PATH);
 db.exec("PRAGMA journal_mode = WAL;");
