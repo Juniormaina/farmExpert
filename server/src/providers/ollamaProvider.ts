@@ -7,7 +7,7 @@ const GENERATE_TIMEOUT_MS = 8000;
 
 function buildSystemPrompt(context: GenerationContext): string {
   return [
-    "You are SmartShambaAI, an assistant for Kenyan smallholder farmers.",
+    "You are Farm Expert, an assistant for Kenyan smallholder farmers.",
     "You must NOT invent any prices, availability, or numbers.",
     "Below are FACTS already computed by deterministic services. Rephrase them warmly and clearly",
     `in ${context.locale === "sw" ? "Kiswahili" : "English"}, keeping every number and label exactly as given.`,

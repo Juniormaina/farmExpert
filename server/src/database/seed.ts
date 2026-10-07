@@ -38,5 +38,5 @@ const isMainModule = process.argv[1]?.endsWith("seed.ts") || process.argv[1]?.en
 if (isMainModule) {
   resetDemoData();
   // eslint-disable-next-line no-console
-  console.log("Seeded SmartShambaAI demo database.");
+  console.log("Seeded Farm Expert demo database.");
 }

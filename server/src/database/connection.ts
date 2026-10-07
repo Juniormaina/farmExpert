@@ -32,15 +32,18 @@ function ensureWritableDir(dir: string): boolean {
 
 function resolveDbPath(): string {
   const configured =
-    process.env.SMARTSHAMBAAI_DB_PATH ?? process.env.SHAMBAAI_DB_PATH ?? process.env.DATABASE_PATH;
+    process.env.FARMEXPERT_DB_PATH ??
+    process.env.SMARTSHAMBAAI_DB_PATH ??
+    process.env.SHAMBAAI_DB_PATH ??
+    process.env.DATABASE_PATH;
   if (configured) {
     ensureWritableDir(path.dirname(path.resolve(configured)));
     return configured;
   }
   if (ensureWritableDir(DATA_DIR)) {
-    return path.join(DATA_DIR, "smartshambaai.db");
+    return path.join(DATA_DIR, "farmexpert.db");
   }
-  const fallback = path.join(os.tmpdir(), "smartshambaai.db");
+  const fallback = path.join(os.tmpdir(), "farmexpert.db");
   ensureWritableDir(path.dirname(fallback));
   return fallback;
 }

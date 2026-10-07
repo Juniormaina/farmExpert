@@ -1,10 +1,10 @@
 import type { FertilizerListing, MarketPrice, SystemStatus } from "../types";
 
 const KEYS = {
-  markets: "smartshambaai:cache:markets",
-  fertilizer: "smartshambaai:cache:fertilizer",
-  status: "smartshambaai:cache:status",
-  pendingMessages: "smartshambaai:queue:messages"
+  markets: "farmexpert:cache:markets",
+  fertilizer: "farmexpert:cache:fertilizer",
+  status: "farmexpert:cache:status",
+  pendingMessages: "farmexpert:queue:messages"
 } as const;
 
 interface CachedEntry<T> {

@@ -16,7 +16,7 @@ const manifest = path.join(clientDist, "manifest.webmanifest");
 const sw = path.join(clientDist, "sw.js");
 
 if (!fs.existsSync(indexHtml)) {
-  console.error(`[smartshambaai] Missing ${indexHtml}`);
+  console.error(`[farmexpert] Missing ${indexHtml}`);
   console.error("Run `npm run build` before `npm start` / `npm run start:web`.");
   process.exit(1);
 }
@@ -27,15 +27,15 @@ const pwaBits = [
   ["registerSW.js", fs.existsSync(path.join(clientDist, "registerSW.js"))]
 ];
 for (const [name, ok] of pwaBits) {
-  console.log(`[smartshambaai] PWA asset ${name}: ${ok ? "ok" : "MISSING"}`);
+  console.log(`[farmexpert] PWA asset ${name}: ${ok ? "ok" : "MISSING"}`);
 }
 
 process.env.NODE_ENV = process.env.NODE_ENV || "production";
 process.env.SERVE_CLIENT = process.env.SERVE_CLIENT === "0" ? "0" : "1";
 process.env.CLIENT_DIST_PATH = process.env.CLIENT_DIST_PATH || clientDist;
 
-console.log(`[smartshambaai] CLIENT_DIST_PATH=${process.env.CLIENT_DIST_PATH}`);
-console.log(`[smartshambaai] SERVE_CLIENT=${process.env.SERVE_CLIENT}`);
+console.log(`[farmexpert] CLIENT_DIST_PATH=${process.env.CLIENT_DIST_PATH}`);
+console.log(`[farmexpert] SERVE_CLIENT=${process.env.SERVE_CLIENT}`);
 
 const child = spawn("npm", ["run", "start", "--workspace", "server"], {
   cwd: root,

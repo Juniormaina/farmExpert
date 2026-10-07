@@ -53,7 +53,7 @@ function pick<T>(items: T[], input: string): T | undefined {
 
 function mainMenu(locale: Locale): string {
   return [
-    t(locale, "WELCOME to SmartShambaAI", "KARIBU SmartShambaAI"),
+    t(locale, "WELCOME to Farm Expert", "KARIBU Farm Expert"),
     t(locale, "1. Crop prices", "1. Bei za mazao"),
     t(locale, "2. Fertilizer price", "2. Bei ya mbolea"),
     t(locale, "3. Plan budget", "3. Panga budget"),
@@ -89,7 +89,7 @@ const farmSizePrompt = (locale: Locale) => t(locale, "Enter farm size in acres:"
 const budgetPrompt = (locale: Locale) => t(locale, "Enter your budget in KSh:", "Weka bajeti yako kwa shilingi:");
 const resultFooter = (locale: Locale) => t(locale, "0. Main menu  5. Exit", "0. Menyu kuu  5. Toka");
 const invalid = (locale: Locale) => t(locale, "Invalid choice.\n", "Chaguo si sahihi.\n");
-const goodbye = (locale: Locale) => t(locale, "Thank you for using SmartShambaAI.", "Asante kwa kutumia SmartShambaAI.");
+const goodbye = (locale: Locale) => t(locale, "Thank you for using Farm Expert.", "Asante kwa kutumia Farm Expert.");
 
 export function startUssdSession(sessionId: string, locale: Locale = "en"): UssdStepResult {
   sessions.set(sessionId, { state: "MAIN", locale });

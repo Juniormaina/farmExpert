@@ -1,4 +1,4 @@
-# SmartShambaAI
+# Farm Expert
 
 **Farming decisions, made simpler.**
 
@@ -7,7 +7,7 @@ prices, compare fertilizer costs, and plan a planting budget over **Web**, **SMS
 and **USSD-style** interfaces — even when connectivity is limited.
 
 <p align="center">
-  <img src="docs/screenshots/desktop.png" alt="SmartShambaAI dashboard" width="92%" />
+  <img src="docs/screenshots/desktop.png" alt="Farm Expert dashboard" width="92%" />
 </p>
 
 ## The problem
@@ -43,7 +43,7 @@ One assistant that works on **any phone** and **without internet**.
 > shilingi 12,000."*
 > (How much is fertilizer, what does maize sell for, and I have KSh 12,000.)
 
-SmartShambaAI replies with maize and fertilizer prices, and tells her the plan costs
+Farm Expert replies with maize and fertilizer prices, and tells her the plan costs
 **KSh 20,000**, so she is **KSh 8,000 short**.
 
 **Try it:** click **Start Demo**, then open the **SMS** and **USSD** tabs to see the same
@@ -112,7 +112,7 @@ The repo already includes `vercel.json` and `api/[[...path]].ts`.
 | `MODELSCOPE_BASE_URL` | Alias for hosted base URL |
 | `MODELSCOPE_MODEL` | Alias for hosted model |
 | `AI_REPLY_BUDGET_MS` | Max wait for AI phrasing (default `10000`) |
-| `SMARTSHAMBAAI_DB_PATH` | SQLite path (use `/tmp/smartshambaai.db` on Vercel) |
+| `FARMEXPERT_DB_PATH` | SQLite path (use `/tmp/farmexpert.db` on Vercel) |
 
 4. Deploy. The UI is static from `client/dist`; `/api/*` hits the Express app via the serverless function.
 
@@ -132,7 +132,7 @@ The repo includes `render.yaml`.
    - **Start:** `npm start` (serves `client/dist` + `/api`, including PWA `sw.js` / manifest)
 3. Confirm `healthCheckPath` is `/health`.
 4. Optionally set hosted AI secrets in the Render dashboard (`HOSTED_AI_*` or `MODELSCOPE_*`).
-5. SQLite uses `/tmp/smartshambaai.db` on the free plan (ephemeral disk — demo data is reseeded on cold start).
+5. SQLite uses `/tmp/farmexpert.db` on the free plan (ephemeral disk — demo data is reseeded on cold start).
 
 Manual service (without Blueprint):
 

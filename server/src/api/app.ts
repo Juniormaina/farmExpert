@@ -52,12 +52,12 @@ export function createApp(options: CreateAppOptions = {}): Express {
   if (serveClient && !clientDist) {
     // eslint-disable-next-line no-console
     console.error(
-      "[smartshambaai] SERVE_CLIENT/production is on but client/dist was not found. " +
+      "[farmexpert] SERVE_CLIENT/production is on but client/dist was not found. " +
         "Run `npm run build` (or set CLIENT_DIST_PATH). Falling back to the API status page."
     );
   } else if (clientDist) {
     // eslint-disable-next-line no-console
-    console.log(`[smartshambaai] Serving frontend (PWA) from ${clientDist}`);
+    console.log(`[farmexpert] Serving frontend (PWA) from ${clientDist}`);
   }
 
   app.use(cors());
@@ -94,11 +94,11 @@ export function createApp(options: CreateAppOptions = {}): Express {
     app.get("/", (_req, res) => {
       res.type("html").send(`<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>SmartShambaAI API</title>
+<head><meta charset="utf-8"><title>Farm Expert API</title>
 <style>body{font-family:system-ui,sans-serif;max-width:40rem;margin:3rem auto;padding:0 1rem;line-height:1.5}
 code{background:#f0f0f0;padding:0.1em 0.35em;border-radius:4px}</style></head>
 <body>
-  <h1>SmartShambaAI API</h1>
+  <h1>Farm Expert API</h1>
   <p>This is the backend. Open the web app at <a href="http://localhost:5173">http://localhost:5173</a>.</p>
   <p>Health check: <a href="/health"><code>/health</code></a> · Status: <a href="/api/status"><code>/api/status</code></a></p>
 </body>

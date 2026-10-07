@@ -14,7 +14,7 @@ describe("GET /", () => {
     const res = await request(app).get("/");
     expect(res.status).toBe(200);
     expect(res.text).toContain("http://localhost:5173");
-    expect(res.text).toContain("SmartShambaAI API");
+    expect(res.text).toContain("Farm Expert API");
   });
 });
 
@@ -34,7 +34,7 @@ describe("production static + PWA serving", () => {
     const home = await request(spa).get("/");
     expect(home.status).toBe(200);
     expect(home.text).toContain('id="root"');
-    expect(home.text).not.toContain("SmartShambaAI API");
+    expect(home.text).not.toContain("Farm Expert API");
     expect(home.text).toMatch(/manifest\.webmanifest|registerSW\.js|vite-plugin-pwa/);
 
     const status = await request(spa).get("/api/status");
@@ -44,7 +44,7 @@ describe("production static + PWA serving", () => {
     if (fs.existsSync(path.join(clientDist, "manifest.webmanifest"))) {
       const manifest = await request(spa).get("/manifest.webmanifest");
       expect(manifest.status).toBe(200);
-      expect(manifest.text).toContain("SmartShambaAI");
+      expect(manifest.text).toContain("Farm Expert");
     }
     if (fs.existsSync(path.join(clientDist, "sw.js"))) {
       const sw = await request(spa).get("/sw.js");

@@ -1,9 +1,9 @@
-# Render Blueprint for SmartShambaAI (single web service: API + UI)
+# Render Blueprint for Farm Expert (single web service: API + UI)
 # https://render.com/docs/blueprint-spec
 
 services:
   - type: web
-    name: smartshambaai
+    name: farmexpert
     runtime: node
     plan: free
     region: oregon
@@ -17,8 +17,8 @@ services:
         value: "1"
       - key: CLIENT_DIST_PATH
         value: ./client/dist
-      - key: SMARTSHAMBAAI_DB_PATH
-        value: /tmp/smartshambaai.db
+      - key: FARMEXPERT_DB_PATH
+        value: /tmp/farmexpert.db
       - key: AI_REPLY_BUDGET_MS
         value: "10000"
       - key: API_STYLE

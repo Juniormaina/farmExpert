@@ -1,8 +1,8 @@
 {
-  "name": "smartshambaai",
+  "name": "farmexpert",
   "private": true,
   "version": "0.1.0",
-  "description": "SmartShambaAI - offline-first agricultural AI agent for Kenyan smallholder farmers",
+  "description": "Farm Expert - offline-first agricultural AI agent for Kenyan smallholder farmers",
   "engines": {
     "node": ">=22"
   },
