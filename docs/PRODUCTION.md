@@ -114,7 +114,7 @@ Structured request logs are written only when `NODE_ENV=production`.
 
 There is no product analytics. Do not add a tracker in order to "see usage" without a separate decision.
 
-The pilot database path is `/var/data/farmexpert.db` on a Render disk (`render.yaml`). That path is outside `/tmp`, so production will start. A path under the OS temp directory is refused in production unless `ALLOW_EPHEMERAL_DB=1`. The farm profile stays on the device. Feedback is the server row that must survive a restart. See `docs/PILOT_RUNBOOK.md` for backup, restore, and rollback. Those host checks are not the same as a passing local test.
+The pilot database path is `/var/data/farmexpert.db` on a Render disk (`render.yaml`). The disk has to be mounted on the service; the blueprint file does not attach it by itself. If that directory cannot be created, the process opens the application data directory and `/health` reports `storage: "ephemeral"`. A path under the OS temp directory is refused in production unless `ALLOW_EPHEMERAL_DB=1`. The farm profile stays on the device. Feedback is the server row that must survive a restart. See `docs/PILOT_RUNBOOK.md` for backup, restore, and rollback. Those host checks are not the same as a passing local test.
 
 ## Environment
 

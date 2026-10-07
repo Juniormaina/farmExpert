@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express, { type Express, type ErrorRequestHandler, type RequestHandler } from "express";
 import cors from "cors";
-import { databaseReachable, storageClass, dbFilePath } from "../database/connection.js";
+import { databaseReachable, databaseStorage } from "../database/connection.js";
 import { farmerError, newRequestId } from "./requestId.js";
 import { securityHeaders } from "./security.js";
 import { router } from "./routes.js";
@@ -105,7 +105,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
       ok: database === "ok",
       dataMode: "demo" as const,
       database,
-      storage: storageClass(dbFilePath())
+      storage: databaseStorage()
     };
     res.status(body.ok ? 200 : 503).json(body);
   });

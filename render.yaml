@@ -1,6 +1,8 @@
 # Pilot host: one Render web service with a persistent disk.
 # The free plan has no disk, so it is not the pilot path. A disk keeps SQLite
 # across deploys and restarts. It does not replace an off-site backup.
+# A git push does not attach this disk to a service that was created without it.
+# Add the disk in the dashboard, mounted at /var/data, or apply this blueprint.
 # https://render.com/docs/disks
 #
 # Before the first pilot deploy, set VITE_SUPPORT_CONTACT in the dashboard.

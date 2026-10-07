@@ -38,14 +38,27 @@ process.env.NODE_ENV = process.env.NODE_ENV || "production";
 process.env.SERVE_CLIENT = process.env.SERVE_CLIENT === "0" ? "0" : "1";
 process.env.CLIENT_DIST_PATH = process.env.CLIENT_DIST_PATH || clientDist;
 
+const configuredDb = process.env.FARMEXPERT_DB_PATH;
+if (configuredDb) {
+  const directory = path.dirname(path.resolve(configuredDb));
+  try {
+    fs.mkdirSync(directory, { recursive: true });
+    console.log(`[farmexpert] database directory ready: ${directory}`);
+  } catch (err) {
+    const code = err && typeof err === "object" && "code" in err ? String(err.code) : "error";
+    console.error(
+      `[farmexpert] database directory was not created (${directory}, ${code}). The server will use its local data directory until a disk is mounted there.`
+    );
+  }
+}
+
 console.log(`[farmexpert] CLIENT_DIST_PATH=${process.env.CLIENT_DIST_PATH}`);
 console.log(`[farmexpert] SERVE_CLIENT=${process.env.SERVE_CLIENT}`);
 
 const child = spawn("npm", ["run", "start", "--workspace", "server"], {
   cwd: root,
   stdio: "inherit",
-  env: process.env,
-  shell: true
+  env: process.env
 });
 
 child.on("exit", (code, signal) => {

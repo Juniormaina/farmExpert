@@ -30,25 +30,75 @@ function ensureWritableDir(dir: string): boolean {
   }
 }
 
-function resolveDbPath(): string {
-  const configured =
+export function selectDatabaseFile(
+  configured: string | undefined,
+  directoryWritable: (directory: string) => boolean,
+  locations: { dataDir: string; tempDir: string }
+): { filePath: string; usedConfiguredPath: boolean } {
+  if (configured) {
+    const absolute = path.resolve(configured);
+    if (directoryWritable(path.dirname(absolute))) {
+      return { filePath: absolute, usedConfiguredPath: true };
+    }
+  }
+  if (directoryWritable(locations.dataDir)) {
+    return { filePath: path.join(locations.dataDir, "farmexpert.db"), usedConfiguredPath: false };
+  }
+  return { filePath: path.join(locations.tempDir, "farmexpert.db"), usedConfiguredPath: false };
+}
+
+function configuredDatabasePath(): string | undefined {
+  return (
     process.env.FARMEXPERT_DB_PATH ??
     process.env.SMARTSHAMBAAI_DB_PATH ??
     process.env.SHAMBAAI_DB_PATH ??
-    process.env.DATABASE_PATH;
-  if (configured) {
-    ensureWritableDir(path.dirname(path.resolve(configured)));
-    return configured;
-  }
-  if (ensureWritableDir(DATA_DIR)) {
-    return path.join(DATA_DIR, "farmexpert.db");
-  }
-  const fallback = path.join(os.tmpdir(), "farmexpert.db");
-  ensureWritableDir(path.dirname(fallback));
-  return fallback;
+    process.env.DATABASE_PATH
+  );
 }
 
-const DB_PATH = resolveDbPath();
+const databaseLocations = { dataDir: DATA_DIR, tempDir: os.tmpdir() };
+
+function openDatabase(filePath: string) {
+  const database = new DatabaseSync(filePath);
+  database.exec("PRAGMA journal_mode = WAL;");
+  return database;
+}
+
+const configured = configuredDatabasePath();
+let choice = selectDatabaseFile(configured, ensureWritableDir, databaseLocations);
+if (configured && !choice.usedConfiguredPath) {
+  // eslint-disable-next-line no-console
+  console.error(
+    JSON.stringify({
+      level: "error",
+      event: "database_directory_unwritable",
+      detail:
+        "The configured database directory could not be created. Using the application data directory. On Render, add a disk mounted at that path. This copy does not survive a deploy."
+    })
+  );
+}
+
+let opened: ReturnType<typeof openDatabase>;
+try {
+  opened = openDatabase(choice.filePath);
+} catch (err) {
+  if (!choice.usedConfiguredPath) throw err;
+  // eslint-disable-next-line no-console
+  console.error(
+    JSON.stringify({
+      level: "error",
+      event: "database_open_failed",
+      error: err instanceof Error ? err.name : "Error",
+      detail:
+        "The configured database file could not be opened. Using the application data directory. On Render, add a disk mounted at that path. This copy does not survive a deploy."
+    })
+  );
+  choice = selectDatabaseFile(undefined, ensureWritableDir, databaseLocations);
+  opened = openDatabase(choice.filePath);
+}
+
+const DB_PATH = choice.filePath;
+const configuredPathUnused = Boolean(configured) && !choice.usedConfiguredPath;
 
 export function dbFilePath(): string {
   return DB_PATH;
@@ -66,8 +116,17 @@ export function ephemeralDatabaseBlocked(filePath: string, env: NodeJS.ProcessEn
   return env.NODE_ENV === "production" && storageClass(filePath) === "ephemeral" && env.ALLOW_EPHEMERAL_DB !== "1";
 }
 
-export const db = new DatabaseSync(DB_PATH);
-db.exec("PRAGMA journal_mode = WAL;");
+/** Ephemeral when the opened file is temporary, or when the configured disk path could not be used. */
+export function storageForOpen(filePath: string, configuredPathWasUnused: boolean): "persistent" | "ephemeral" {
+  if (configuredPathWasUnused) return "ephemeral";
+  return storageClass(filePath);
+}
+
+export function databaseStorage(): "persistent" | "ephemeral" {
+  return storageForOpen(DB_PATH, configuredPathUnused);
+}
+
+export const db = opened;
 
 function columnNames(table: string): string[] {
   const rows = db.prepare(`PRAGMA table_info(${table})`).all() as unknown as Array<{ name: string }>;

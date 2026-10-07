@@ -48,7 +48,7 @@ Escalation:
 
 | Question | Answer |
 |---|---|
-| Where does it live? | SQLite at `FARMEXPERT_DB_PATH`. The pilot blueprint mounts a Render disk at `/var/data`. |
+| Where does it live? | SQLite at `FARMEXPERT_DB_PATH`. The pilot blueprint mounts a Render disk at `/var/data`. If that directory cannot be created, the process starts on the application data directory and `/health` reports `storage: "ephemeral"`. That copy does not survive a deploy. |
 | What is stored? | Demo market and fertilizer rows, a request queue, feedback (rating, optional comment, context, time), and `schema_meta` version `1`. |
 | What is not stored? | The farm profile. That stays in the browser under `farmexpert:profile`. Questions are not kept as an account. |
 | Process restart | Files on the disk remain. In-memory rate limits and USSD simulator sessions do not. USSD is not part of the pilot. |

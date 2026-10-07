@@ -7,7 +7,16 @@ import request from "supertest";
 import { createApp } from "../src/api/app.js";
 import { farmerError } from "../src/api/requestId.js";
 import { demoResetAllowed } from "../src/api/security.js";
-import { db, dbFilePath, ephemeralDatabaseBlocked, initSchema, legacyMarketTable, storageClass } from "../src/database/connection.js";
+import {
+  db,
+  dbFilePath,
+  ephemeralDatabaseBlocked,
+  initSchema,
+  legacyMarketTable,
+  selectDatabaseFile,
+  storageClass,
+  storageForOpen
+} from "../src/database/connection.js";
 import { pilotEnvProblems } from "../../scripts/check-pilot-env.mjs";
 import { backupDatabase, restoreDatabase } from "../../scripts/sqlite-backup.mjs";
 
@@ -101,6 +110,21 @@ describe("storage classification", () => {
     expect(storageClass(path.join(os.tmpdir(), "farmexpert.db"))).toBe("ephemeral");
     expect(storageClass("/var/data/farmexpert.db")).toBe("persistent");
     expect(dbFilePath().includes(os.tmpdir())).toBe(true);
+  });
+
+  it("uses a writable configured path and relocates when that directory cannot be created", () => {
+    const locations = { dataDir: "/app/server/data", tempDir: "/tmp" };
+    expect(selectDatabaseFile("/var/data/farmexpert.db", () => true, locations)).toEqual({
+      filePath: "/var/data/farmexpert.db",
+      usedConfiguredPath: true
+    });
+    expect(selectDatabaseFile("/var/data/farmexpert.db", (dir) => dir === locations.dataDir, locations)).toEqual({
+      filePath: "/app/server/data/farmexpert.db",
+      usedConfiguredPath: false
+    });
+    expect(selectDatabaseFile("/var/data/farmexpert.db", () => false, locations).filePath).toBe("/tmp/farmexpert.db");
+    expect(storageForOpen("/app/server/data/farmexpert.db", true)).toBe("ephemeral");
+    expect(storageForOpen("/var/data/farmexpert.db", false)).toBe("persistent");
   });
 
   it("blocks an ephemeral database only for production", () => {

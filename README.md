@@ -181,8 +181,9 @@ Render is the pilot host. The blueprint in `render.yaml` is one starter web serv
 1. In the Render dashboard, create a Blueprint from this repository.
 2. When asked, set `VITE_SUPPORT_CONTACT` to the real support route. Leave `HOSTED_AI_API_KEY`, `SMS_WEBHOOK_TOKEN`, and `USSD_WEBHOOK_TOKEN` empty.
 3. The build runs `node scripts/check-pilot-env.mjs`, then `npm install` and `npm run build`. Start is `npm start`.
-4. Confirm the health check path is `/health` and `FARMEXPERT_DB_PATH` is `/var/data/farmexpert.db`.
-5. Follow [docs/PILOT_RUNBOOK.md](docs/PILOT_RUNBOOK.md) before a farmer opens the site. A blueprint file is not proof that HTTPS, the disk, or rollback have been checked.
+4. Confirm the health check path is `/health` and `FARMEXPERT_DB_PATH` is `/var/data/farmexpert.db`. In the dashboard, the service needs a disk mounted at `/var/data`. Pushing this repository does not attach that disk to an existing service.
+5. `GET /health` should report `storage: "persistent"` once that disk is mounted. `storage: "ephemeral"` means the process started on the application data directory because `/var/data` could not be created. That copy is replaced on the next deploy.
+6. Follow [docs/PILOT_RUNBOOK.md](docs/PILOT_RUNBOOK.md) before a farmer opens the site. A blueprint file is not proof that HTTPS, the disk, or rollback have been checked.
 
 `vercel.json` remains for a serverless preview. Do not point the pilot at it.
 
