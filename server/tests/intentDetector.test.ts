@@ -104,4 +104,14 @@ describe("detectIntent", () => {
     expect(detectIntent("how much is can fertilizer").entities.fertilizerType).toBe("CAN");
     expect(detectIntent("bei ya can Nakuru").entities.fertilizerType).toBe("CAN");
   });
+
+  it("does not treat a crop disease question as a price", () => {
+    const english = detectIntent("My maize has blight");
+    expect(english.intents).toEqual(["agricultural_distress"]);
+    expect(english.intents).not.toContain("crop_price");
+
+    const swahili = detectIntent("Mahindi yangu yana ugonjwa");
+    expect(swahili.intents).toEqual(["agricultural_distress"]);
+    expect(swahili.intents).not.toContain("crop_price");
+  });
 });

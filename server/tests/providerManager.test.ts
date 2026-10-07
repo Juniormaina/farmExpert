@@ -42,6 +42,24 @@ describe("providerManager", () => {
     expect(result.text).toBe("Maize: KSh 3,200.");
   });
 
+  it("rejects a local Ollama reply that adds a number", async () => {
+    vi.spyOn(OllamaProvider.prototype, "isAvailable").mockResolvedValue(true);
+    vi.spyOn(OllamaProvider.prototype, "generateReply").mockResolvedValue(
+      "Maize is KSh 3,200. The verified price today is also KSh 99,999."
+    );
+
+    const result = await generateReply({
+      rawMessage: "test",
+      locale: "en",
+      intents: ["crop_price"],
+      entities: {},
+      baseReply: "Maize: KSh 3,200."
+    });
+
+    expect(result.providerUsed).toBe("deterministic");
+    expect(result.text).toBe("Maize: KSh 3,200.");
+  });
+
   it("accepts a local Ollama reply that keeps every number", async () => {
     vi.spyOn(OllamaProvider.prototype, "isAvailable").mockResolvedValue(true);
     vi.spyOn(OllamaProvider.prototype, "generateReply").mockResolvedValue("Good news: maize is KSh 3,200 a bag.");

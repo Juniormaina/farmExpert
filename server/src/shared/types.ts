@@ -69,7 +69,10 @@ export type AgentIntent =
   | "crop_price"
   | "fertilizer_price"
   | "fertilizer_availability"
+  | "fertilizer_quantity"
   | "budget_plan"
+  | "agricultural_distress"
+  | "unsupported_claim"
   | "help"
   | "unknown";
 

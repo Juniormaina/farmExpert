@@ -14,10 +14,13 @@ export function ChannelSwitcher() {
   };
 
   return (
-    <nav className="channel-switcher" aria-label="Channel switcher">
+    <nav className="channel-switcher" aria-label={t.channels}>
+      <p className="eyebrow channel-label">{t.useProduct}</p>
+      <div className="channel-row">
       {CHANNELS.map((c) => (
         <button
           key={c}
+          type="button"
           className={`channel-tab ${channel === c ? "active" : ""}`}
           onClick={() => setChannel(c)}
           aria-pressed={channel === c}
@@ -26,6 +29,7 @@ export function ChannelSwitcher() {
           <span className="tab-hint">{tabs[c].hint}</span>
         </button>
       ))}
+      </div>
     </nav>
   );
 }

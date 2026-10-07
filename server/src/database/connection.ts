@@ -50,6 +50,22 @@ function resolveDbPath(): string {
 
 const DB_PATH = resolveDbPath();
 
+export function dbFilePath(): string {
+  return DB_PATH;
+}
+
+/** A path under the OS temp directory does not survive a host restart. */
+export function storageClass(filePath: string): "persistent" | "ephemeral" {
+  const resolved = path.resolve(filePath);
+  const temp = path.resolve(os.tmpdir());
+  if (resolved === temp || resolved.startsWith(temp + path.sep)) return "ephemeral";
+  return "persistent";
+}
+
+export function ephemeralDatabaseBlocked(filePath: string, env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.NODE_ENV === "production" && storageClass(filePath) === "ephemeral" && env.ALLOW_EPHEMERAL_DB !== "1";
+}
+
 export const db = new DatabaseSync(DB_PATH);
 db.exec("PRAGMA journal_mode = WAL;");
 
@@ -58,11 +74,35 @@ function columnNames(table: string): string[] {
   return rows.map((r) => r.name);
 }
 
+/** True only for a pre-multi-crop demo table. Feedback is never part of this check. */
+export function legacyMarketTable(columns: string[]): boolean {
+  return columns.length > 0 && !columns.includes("unit");
+}
+
+export function databaseReachable(): boolean {
+  try {
+    db.prepare("SELECT 1 AS ok").get();
+    return true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(
+      JSON.stringify({
+        level: "error",
+        event: "database_unavailable",
+        error: err instanceof Error ? err.name : "Error"
+      })
+    );
+    return false;
+  }
+}
+
 export function initSchema(): void {
-  // Databases created before multi-crop support store maize bags only. The
-  // table holds nothing but reseedable demo data, so rebuild it.
+  // Databases created before multi-crop support store maize bags only. That
+  // table holds reseedable demo prices, not farmer feedback, so rebuild it.
   const existing = columnNames("market_prices");
-  if (existing.length > 0 && !existing.includes("unit")) {
+  if (legacyMarketTable(existing)) {
+    // eslint-disable-next-line no-console
+    console.error(JSON.stringify({ level: "warn", event: "rebuild_legacy_market_table" }));
     db.exec("DROP TABLE market_prices");
   }
 
@@ -101,7 +141,23 @@ export function initSchema(): void {
       created_at TEXT NOT NULL,
       synced INTEGER NOT NULL DEFAULT 0
     );
+
+    CREATE TABLE IF NOT EXISTS feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      rating TEXT NOT NULL,
+      comment TEXT,
+      context TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS feedback_created_at ON feedback (created_at);
+
+    CREATE TABLE IF NOT EXISTS schema_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
+  db.prepare("INSERT OR IGNORE INTO schema_meta (key, value) VALUES ('version', '1')").run();
 }
 
 export function isSeeded(): boolean {

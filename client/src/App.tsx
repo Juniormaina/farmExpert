@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { AppProvider, useAppContext } from "./context/AppContext";
 import { Header } from "./components/Header";
 import { ChannelSwitcher } from "./components/ChannelSwitcher";
@@ -9,9 +10,19 @@ import { BudgetCalculatorPanel } from "./components/BudgetCalculatorPanel";
 import { PriceFilters } from "./components/PriceFilters";
 import { SmsSimulator } from "./components/SmsSimulator";
 import { UssdSimulator } from "./components/UssdSimulator";
+import { TaskCards } from "./components/TaskCards";
+import { InstallPrompt } from "./components/InstallPrompt";
+import { Onboarding } from "./components/Onboarding";
+import { UpdatePrompt } from "./components/UpdatePrompt";
+import { UI_STRINGS } from "./i18n";
 
 function Dashboard() {
-  const { channel, demoResetKey } = useAppContext();
+  const { channel, demoResetKey, locale, profileRevision } = useAppContext();
+  const t = UI_STRINGS[locale];
+
+  useEffect(() => {
+    document.documentElement.lang = locale === "sw" ? "sw" : "en";
+  }, [locale]);
 
   // On wide screens the data column sits beside every channel, so SMS and USSD
   // show the same prices the phone is answering with. On phones it only
@@ -20,9 +31,16 @@ function Dashboard() {
 
   return (
     <>
+      <a className="skip-link" href="#content">
+        {t.skipToContent}
+      </a>
       <Header />
-      <main className="app-shell">
+      <main id="content" className="app-shell">
+        {channel === "web" && <TaskCards />}
         <ChannelSwitcher />
+        {channel === "web" && <Onboarding />}
+        {channel === "web" && <InstallPrompt />}
+        <UpdatePrompt />
         <div className="layout">
           <div className="layout-channel">
             <DemoProfileCard key={`profile-${demoResetKey}`} />
@@ -37,7 +55,7 @@ function Dashboard() {
           </div>
         </div>
         <div className={channel === "web" ? "layout-wide" : "layout-wide desktop-only"}>
-          <BudgetCalculatorPanel key={`budget-${demoResetKey}`} />
+          <BudgetCalculatorPanel key={`budget-${demoResetKey}-${profileRevision}`} />
         </div>
       </main>
     </>

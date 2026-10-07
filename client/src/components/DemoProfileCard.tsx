@@ -1,3 +1,4 @@
+import { getCrop } from "../../../server/src/shared/crops";
 import { useAppContext } from "../context/AppContext";
 import { UI_STRINGS } from "../i18n";
 
@@ -8,19 +9,21 @@ export function DemoProfileCard() {
     .split(" ")
     .map((p) => p[0])
     .join("");
+  const cropLabel = getCrop(demoProfile.crop).name[locale].toLowerCase();
+  const size = demoProfile.farmSizeAcres;
+  const sizeLabel = locale === "sw" ? `${size} ekari ya ${cropLabel}` : `${size} ${size === 1 ? t.acre : t.acres} of ${cropLabel}`;
 
   return (
     <section className="card demo-profile-card">
-      <div className="avatar-circle">{initials}</div>
+      <div className="avatar-circle" aria-hidden="true">
+        {initials}
+      </div>
       <div>
-        <div style={{ fontSize: "0.78rem", color: "var(--color-neutral-700)", fontWeight: 600 }}>
-          {t.profileGreeting}
-        </div>
-        <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>{demoProfile.name}</div>
-        <div style={{ fontSize: "0.85rem", color: "var(--color-neutral-700)" }}>
-          {demoProfile.county} · {demoProfile.farmSizeAcres} {locale === "sw" ? "ekari ya mahindi" : "acre(s) of maize"} ·{" "}
-          KSh {demoProfile.budgetKsh.toLocaleString()} {locale === "sw" ? "bajeti" : "budget"}
-        </div>
+        <p className="profile-kicker">{t.profileGreeting}</p>
+        <p className="profile-name">{demoProfile.name}</p>
+        <p className="profile-meta">
+          {demoProfile.county} · {sizeLabel} · KSh {demoProfile.budgetKsh.toLocaleString()} {locale === "sw" ? "bajeti" : "budget"}
+        </p>
       </div>
     </section>
   );

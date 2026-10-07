@@ -1,4 +1,4 @@
-import { detectIntent } from "../../../server/src/agent/intentDetector";
+import { detectIntent, missingBudgetFields } from "../../../server/src/agent/intentDetector";
 import { buildDeterministicReply, type ResponseData } from "../../../server/src/agent/responseGenerator";
 import { getCrop } from "../../../server/src/shared/crops";
 import type { AgentResponse, Locale } from "../types";
@@ -29,11 +29,11 @@ export function answerLocally(message: string, localeHint?: Locale): AgentRespon
     );
   }
   if (intents.includes("budget_plan")) {
-    const missing = (["county", "farmSizeAcres", "budgetKsh"] as const).filter((key) => entities[key] === undefined);
+    const missing = missingBudgetFields(entities);
     if (missing.length > 0) {
       data.missingForBudget = [...missing];
     } else {
-      const crop = entities.crop ?? "maize";
+      const crop = entities.crop!;
       try {
         data.budget = calculateBudgetLocally(
           {
@@ -46,7 +46,7 @@ export function answerLocally(message: string, localeHint?: Locale): AgentRespon
           locale
         );
       } catch {
-        data.missingForBudget = ["fertilizerType"];
+        data.missingForBudget = ["listing"];
       }
     }
   }

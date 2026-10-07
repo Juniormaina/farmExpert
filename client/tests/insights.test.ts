@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cheapestAvailable, highestPrice, keyPointsFor, splitMoney } from "../src/insights";
+import { cheapestAvailable, highestPrice, keyPointsFor, savingVersusDearest, splitMoney } from "../src/insights";
 import { LOCAL_FERTILIZER_LISTINGS, LOCAL_MARKET_PRICES } from "../src/offline/localData";
 import { calculateBudgetLocally } from "../src/offline/localBudget";
 
@@ -15,6 +15,20 @@ describe("insights", () => {
     const pick = cheapestAvailable([...eldoret, outOfStockCheap]);
     expect(pick?.availability).not.toBe("out_of_stock");
     expect(pick?.type).toBe("CAN");
+  });
+
+  it("reports the saving against the dearest in-stock bag", () => {
+    const listings = LOCAL_FERTILIZER_LISTINGS.filter((listing) => listing.county === "Nakuru");
+    const saving = savingVersusDearest(listings);
+    const available = listings.filter((listing) => listing.availability !== "out_of_stock");
+    const prices = available.map((listing) => listing.pricePerBag);
+    expect(saving).toBe(Math.max(...prices) - Math.min(...prices));
+  });
+
+  it("does not invent a saving when only one bag is in stock", () => {
+    const only = { ...LOCAL_FERTILIZER_LISTINGS[0], availability: "in_stock" as const, pricePerBag: 1000 };
+    const gone = { ...LOCAL_FERTILIZER_LISTINGS[0], availability: "out_of_stock" as const, pricePerBag: 100 };
+    expect(savingVersusDearest([only, gone])).toBeUndefined();
   });
 
   it("returns undefined when everything is out of stock", () => {

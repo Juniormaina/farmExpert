@@ -4,6 +4,7 @@ import { sampleListings, samplePrices } from "../data/sampleData.js";
 export function resetDemoData(): void {
   initSchema();
 
+  // Demo prices and the offline queue are rebuilt. Feedback rows are kept.
   db.exec("DELETE FROM market_prices; DELETE FROM fertilizer_listings; DELETE FROM request_queue;");
 
   const insertMarket = db.prepare(`

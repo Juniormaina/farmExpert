@@ -15,6 +15,20 @@ export function highestPrice(prices: MarketPrice[]): MarketPrice | undefined {
   return prices.reduce<MarketPrice | undefined>((best, p) => (!best || p.pricePerUnit > best.pricePerUnit ? p : best), undefined);
 }
 
+// How much less the cheapest in-stock bag costs than the dearest in-stock bag.
+export function savingVersusDearest(listings: FertilizerListing[]): number | undefined {
+  const available = listings.filter((listing) => listing.availability !== "out_of_stock");
+  if (available.length < 2) return undefined;
+  let low = available[0].pricePerBag;
+  let high = available[0].pricePerBag;
+  for (const listing of available) {
+    if (listing.pricePerBag < low) low = listing.pricePerBag;
+    if (listing.pricePerBag > high) high = listing.pricePerBag;
+  }
+  const saving = high - low;
+  return saving > 0 ? saving : undefined;
+}
+
 // Out-of-stock listings are no use to a farmer today, however cheap.
 export function cheapestAvailable(listings: FertilizerListing[]): FertilizerListing | undefined {
   return listings

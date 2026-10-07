@@ -12,6 +12,7 @@ build/
 *.db-wal
 *.db-shm
 server/data/*.db
+backups/
 
 *.log
 npm-debug.log*

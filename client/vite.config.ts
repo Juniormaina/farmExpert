@@ -6,15 +6,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: "auto",
-      includeAssets: ["favicon-32.png", "apple-touch-icon.png", "icon-192.png", "farmer.jpg"],
+      registerType: "prompt",
+      injectRegister: null,
+      includeAssets: ["favicon-32.png", "apple-touch-icon.png", "icon-192.png"],
       manifest: {
         name: "Farm Expert",
         short_name: "Farm Expert",
-        description: "Farm Expert — offline-first agricultural AI for Kenyan smallholder farmers",
-        theme_color: "#2f6f3e",
-        background_color: "#f7f3ea",
+        description: "A practical farming assistant for crop decisions, demo market prices, fertilizer comparisons, and planting budgets.",
+        theme_color: "#173F32",
+        background_color: "#F5F1E8",
         display: "standalone",
         start_url: "/",
         icons: [
@@ -29,6 +29,7 @@ export default defineConfig({
       workbox: {
         // Include icons/images/manifest so the installable PWA works offline on Render.
         globPatterns: ["**/*.{js,css,html,svg,ico,png,jpg,jpeg,webp,webmanifest}"],
+        globIgnores: ["**/farmer.jpg"],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/api\//, /^\/health$/]
       }

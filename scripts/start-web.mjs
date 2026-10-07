@@ -27,6 +27,10 @@ const pwaBits = [
   ["registerSW.js", fs.existsSync(path.join(clientDist, "registerSW.js"))]
 ];
 for (const [name, ok] of pwaBits) {
+  if (name === "registerSW.js" && !ok && fs.existsSync(sw)) {
+    console.log("[farmexpert] PWA asset registerSW.js: bundled in the app (update prompt registers the service worker)");
+    continue;
+  }
   console.log(`[farmexpert] PWA asset ${name}: ${ok ? "ok" : "MISSING"}`);
 }
 

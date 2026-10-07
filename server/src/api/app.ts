@@ -3,6 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express, { type Express, type ErrorRequestHandler, type RequestHandler } from "express";
 import cors from "cors";
+import { databaseReachable, storageClass, dbFilePath } from "../database/connection.js";
+import { farmerError, newRequestId } from "./requestId.js";
+import { securityHeaders } from "./security.js";
 import { router } from "./routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,6 +46,13 @@ function shouldServeClient(options: CreateAppOptions, clientDist: string | undef
   return process.env.NODE_ENV === "production" && Boolean(clientDist);
 }
 
+/** Path without a query string. Routers rewrite req.path, so logs use the original URL. */
+function requestPath(req: { originalUrl?: string; path: string }): string {
+  const raw = req.originalUrl ?? req.path;
+  const query = raw.indexOf("?");
+  return query === -1 ? raw : raw.slice(0, query);
+}
+
 export function createApp(options: CreateAppOptions = {}): Express {
   const app = express();
   const resolvedDist = resolveClientDist(options.clientDistPath);
@@ -60,10 +70,45 @@ export function createApp(options: CreateAppOptions = {}): Express {
     console.log(`[farmexpert] Serving frontend (PWA) from ${clientDist}`);
   }
 
-  app.use(cors());
+  const origins = (process.env.CORS_ORIGIN ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.use(origins.length > 0 ? cors({ origin: origins }) : cors({ origin: false }));
+  app.use(securityHeaders());
+  app.use((req, res, next) => {
+    const requestId = newRequestId();
+    res.locals.requestId = requestId;
+    res.setHeader("X-Request-Id", requestId);
+    const started = Date.now();
+    res.on("finish", () => {
+      if (process.env.NODE_ENV !== "production") return;
+      const pathOnly = requestPath(req);
+      if (pathOnly !== "/health" && !pathOnly.startsWith("/api")) return;
+      const record: Record<string, string | number> = {
+        level: res.statusCode >= 500 ? "error" : "info",
+        method: req.method,
+        path: pathOnly,
+        status: res.statusCode,
+        ms: Date.now() - started,
+        requestId
+      };
+      console.log(JSON.stringify(record));
+    });
+    next();
+  });
   app.use(express.json({ limit: "32kb" }));
 
-  app.get("/health", (_req, res) => res.json({ ok: true }));
+  app.get("/health", (_req, res) => {
+    const database = databaseReachable() ? "ok" : "unavailable";
+    const body = {
+      ok: database === "ok",
+      dataMode: "demo" as const,
+      database,
+      storage: storageClass(dbFilePath())
+    };
+    res.status(body.ok ? 200 : 503).json(body);
+  });
 
   app.use("/api", router);
 
@@ -106,10 +151,27 @@ code{background:#f0f0f0;padding:0.1em 0.35em;border-radius:4px}</style></head>
     });
   }
 
-  const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+    const requestId = typeof res.locals.requestId === "string" ? res.locals.requestId : newRequestId();
+    const clientStatus = typeof err?.status === "number" && err.status >= 400 && err.status < 500 ? err.status : 500;
     // eslint-disable-next-line no-console
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(
+      JSON.stringify({
+        level: "error",
+        event: clientStatus >= 500 ? "request_failed" : "request_rejected",
+        requestId,
+        method: req.method,
+        path: requestPath(req),
+        status: clientStatus,
+        error: err instanceof Error ? err.name : "Error"
+      })
+    );
+    if (!res.getHeader("X-Request-Id")) res.setHeader("X-Request-Id", requestId);
+    if (clientStatus >= 500) {
+      res.status(500).json({ error: farmerError(requestId) });
+      return;
+    }
+    res.status(clientStatus).json({ error: "The request could not be read." });
   };
   app.use(errorHandler);
 

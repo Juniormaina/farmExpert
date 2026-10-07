@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { sendChatMessage } from "../api/client";
 import { useAppContext } from "../context/AppContext";
+import { userFacingError } from "../errors";
 import { UI_STRINGS } from "../i18n";
 import { keyPointsFor } from "../insights";
-import { suggestionsFor } from "../suggestions";
+import { starterQuestions, suggestionsFor } from "../suggestions";
 import type { AgentIntent, AgentResponse, Locale } from "../types";
 import { HighlightedText, KeyPoints } from "./Highlights";
 import { formatClock } from "./PhoneStatusBar";
+import { FeedbackRow } from "./FeedbackRow";
 
 interface ChatEntry {
   from: "user" | "agent";
@@ -42,7 +44,7 @@ export function ChatPanel() {
     setInput("");
     setSending(true);
     try {
-      const result = await sendChatMessage(text);
+      const result = await sendChatMessage(text, locale);
       const reply = result.data;
       setMessages((prev) => [
         ...prev,
@@ -58,6 +60,11 @@ export function ChatPanel() {
       if (reply.entities.county) setCounty(reply.entities.county);
       if (reply.entities.crop) setCrop(reply.entities.crop);
       setLastIntent(reply.intent);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { from: "agent", text: userFacingError(err, t.serviceError), time: formatClock(new Date()) }
+      ]);
     } finally {
       setSending(false);
     }
@@ -70,37 +77,48 @@ export function ChatPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [demoQueryTrigger]);
 
+  const starters = starterQuestions(crop, county, demoProfile.budgetKsh, locale);
+
   return (
-    <section className="card">
+    <section className="card" id="ask" tabIndex={-1} aria-labelledby="ask-heading">
       <div className="chat-topbar">
-        <img className="chat-avatar" src="/icon-192.png" alt="" />
         <div className="chat-contact">
-          <strong>Farm Expert</strong>
+          <p className="eyebrow">{t.askEyebrow}</p>
+          <h2 id="ask-heading">{t.askPrompt}</h2>
           <span className={online ? "presence online" : "presence offline"}>{online ? t.chatOnline : t.chatOffline}</span>
         </div>
-        <span className="chat-langs">{t.chatSubtitle}</span>
       </div>
       <div className="chat-window chat-window-main" ref={scrollRef} aria-live="polite">
         {messages.length === 0 && !sending && <p className="chat-empty">{t.chatEmpty}</p>}
-        {messages.map((m, i) =>
-          m.from === "user" ? (
-            <div key={i} className="chat-bubble user">
-              {m.text}
-              <span className="bubble-time">{m.time}</span>
-            </div>
-          ) : (
+        {messages.map((m, i) => {
+          if (m.from === "user") {
+            return (
+              <div key={i} className="chat-bubble user">
+                {m.text}
+                <span className="bubble-time">{m.time}</span>
+              </div>
+            );
+          }
+          const points = keyPointsFor(m.data, m.locale ?? locale);
+          return (
             <div key={i} className="agent-turn">
-              <KeyPoints points={keyPointsFor(m.data, m.locale ?? locale)} />
+              {points.length > 0 && (
+                <>
+                  <p className="section-kicker">{t.calculation}</p>
+                  <KeyPoints points={points} />
+                </>
+              )}
+              <p className="section-kicker">{t.recommendation}</p>
               <div className="chat-bubble agent">
                 <HighlightedText text={m.text} />
                 {m.source === "bundled" && (
-                  <div className="offline-note">{locale === "sw" ? "(jibu la nje ya mtandao)" : "(offline fallback reply)"}</div>
+                  <div className="offline-note">{t.offlineReply}</div>
                 )}
                 <span className="bubble-time">{m.time}</span>
               </div>
             </div>
-          )
-        )}
+          );
+        })}
         {sending && (
           <div className="chat-bubble agent typing" role="status">
             <span className="typing-label">{t.thinking}</span>
@@ -113,22 +131,39 @@ export function ChatPanel() {
         )}
       </div>
 
-      <div className="suggestions" aria-label={t.tryAsking}>
-        {suggestionsFor(lastIntent, crop, county, demoProfile.budgetKsh, locale).map((s) => (
-          <button key={s} className="chip" onClick={() => send(s)} disabled={sending}>
-            {s}
-          </button>
-        ))}
-      </div>
+      {messages.length === 0 ? (
+        <div className="starter-list" aria-label={t.tryAsking}>
+          {starters.map((question) => (
+            <button key={question} type="button" className="starter" onClick={() => send(question)} disabled={sending}>
+              {question}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="suggestions" aria-label={t.nextStep}>
+          <span className="suggestions-label">{t.nextStep}</span>
+          {suggestionsFor(lastIntent, crop, county, demoProfile.budgetKsh, locale).map((s) => (
+            <button key={s} type="button" className="chip" onClick={() => send(s)} disabled={sending}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {messages.some((message) => message.from === "agent") && <FeedbackRow context="web" locale={locale} />}
 
       <div className="chat-input-row">
+        <label className="sr-only" htmlFor="ask-input">
+          {t.chatPlaceholder}
+        </label>
         <input
+          id="ask-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send(input)}
           placeholder={t.chatPlaceholder}
         />
-        <button className="btn-primary" onClick={() => send(input)} disabled={sending || !input.trim()}>
+        <button type="button" className="btn-primary" onClick={() => send(input)} disabled={sending || !input.trim()}>
           {t.send}
         </button>
       </div>

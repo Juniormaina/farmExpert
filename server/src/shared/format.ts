@@ -1,5 +1,26 @@
 import { getCrop } from "./crops.js";
-import type { CropId, Locale, MarketPrice } from "./types.js";
+import type { CropId, FertilizerListing, Locale, MarketPrice } from "./types.js";
+
+const CLASSIFICATION_LABEL: Record<MarketPrice["classification"], Record<Locale, string>> = {
+  wholesale: { en: "wholesale", sw: "jumla" },
+  retail: { en: "retail", sw: "rejareja" },
+  "farm-gate": { en: "farm gate", sw: "shambani" }
+};
+
+export function classificationLabel(classification: MarketPrice["classification"], locale: Locale): string {
+  return CLASSIFICATION_LABEL[classification][locale];
+}
+
+const AVAILABILITY_LABEL: Record<FertilizerListing["availability"], Record<Locale, string>> = {
+  in_stock: { en: "in stock", sw: "ipo" },
+  low_stock: { en: "low stock", sw: "kidogo tu" },
+  out_of_stock: { en: "out of stock", sw: "haipo" },
+  unknown: { en: "unknown", sw: "haijulikani" }
+};
+
+export function availabilityLabel(availability: FertilizerListing["availability"], locale: Locale): string {
+  return AVAILABILITY_LABEL[availability][locale];
+}
 
 export function formatKsh(amount: number): string {
   return `KSh ${Math.round(amount).toLocaleString("en-US")}`;

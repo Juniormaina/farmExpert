@@ -1,14 +1,11 @@
 import type { AgentRequest, AgentResponse } from "../shared/types.js";
-import { detectIntent } from "./intentDetector.js";
+import { detectIntent, missingBudgetFields } from "./intentDetector.js";
 import { buildDeterministicReply, type ResponseData } from "./responseGenerator.js";
 import { getCropPrices } from "../agriculture/marketService.js";
 import { getFertilizerListings } from "../agriculture/fertilizerService.js";
 import { calculateBudget, FertilizerUnavailableError } from "../agriculture/budgetCalculator.js";
 import { generateReply } from "../providers/providerManager.js";
 import { getCrop } from "../shared/crops.js";
-
-// A budget question that names no crop is about maize, the most common crop.
-const DEFAULT_BUDGET_CROP = "maize" as const;
 
 export async function handleAgentMessage(request: AgentRequest): Promise<AgentResponse> {
   const { intents, primaryIntent, entities, locale } = detectIntent(request.message, request.locale);
@@ -24,15 +21,11 @@ export async function handleAgentMessage(request: AgentRequest): Promise<AgentRe
   }
 
   if (intents.includes("budget_plan")) {
-    const missing: string[] = [];
-    if (!entities.county) missing.push("county");
-    if (entities.farmSizeAcres === undefined) missing.push("farmSizeAcres");
-    if (entities.budgetKsh === undefined) missing.push("budgetKsh");
-
+    const missing = missingBudgetFields(entities);
     if (missing.length > 0) {
       data.missingForBudget = missing;
     } else {
-      const crop = entities.crop ?? DEFAULT_BUDGET_CROP;
+      const crop = entities.crop!;
       try {
         data.budget = calculateBudget(
           {
@@ -46,7 +39,7 @@ export async function handleAgentMessage(request: AgentRequest): Promise<AgentRe
         );
       } catch (err) {
         if (err instanceof FertilizerUnavailableError) {
-          data.missingForBudget = ["fertilizerType"];
+          data.missingForBudget = ["listing"];
         } else {
           throw err;
         }

@@ -1,15 +1,25 @@
-# Render Blueprint for Farm Expert (single web service: API + UI)
-# https://render.com/docs/blueprint-spec
+# Pilot host: one Render web service with a persistent disk.
+# The free plan has no disk, so it is not the pilot path. A disk keeps SQLite
+# across deploys and restarts. It does not replace an off-site backup.
+# https://render.com/docs/disks
+#
+# Before the first pilot deploy, set VITE_SUPPORT_CONTACT in the dashboard.
+# Leave HOSTED_AI_API_KEY, SMS_WEBHOOK_TOKEN, and USSD_WEBHOOK_TOKEN empty.
+# The build check fails if those rules are broken.
 
 services:
   - type: web
     name: farmexpert
     runtime: node
-    plan: free
+    plan: starter
     region: oregon
-    buildCommand: npm install && npm run build
+    buildCommand: node scripts/check-pilot-env.mjs && npm install && npm run build
     startCommand: npm start
     healthCheckPath: /health
+    disk:
+      name: farmexpert-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
@@ -18,17 +28,22 @@ services:
       - key: CLIENT_DIST_PATH
         value: ./client/dist
       - key: FARMEXPERT_DB_PATH
-        value: /tmp/farmexpert.db
+        value: /var/data/farmexpert.db
+      - key: PILOT_REQUIRE_SUPPORT
+        value: "1"
+      - key: VITE_SUPPORT_CONTACT
+        sync: false
       - key: AI_REPLY_BUDGET_MS
         value: "10000"
       - key: API_STYLE
         value: openai
-      # Optional hosted AI — set in the Render dashboard (do not commit secrets):
-      # HOSTED_AI_API_KEY, HOSTED_AI_BASE_URL, HOSTED_AI_MODEL
-      # or MODELSCOPE_API_KEY, MODELSCOPE_BASE_URL, MODELSCOPE_MODEL
+      # Pilot leaves this empty. The build check rejects a key.
       - key: HOSTED_AI_API_KEY
         sync: false
       - key: HOSTED_AI_BASE_URL
         sync: false
       - key: HOSTED_AI_MODEL
+        sync: false
+      # Optional. Set only if an operator must rebuild demo prices. Not for farmers.
+      - key: DEMO_RESET_TOKEN
         sync: false

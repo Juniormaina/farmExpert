@@ -1,6 +1,6 @@
 import type { CropId, FertilizerType, Locale } from "../shared/types.js";
 import { COUNTIES, CROPS, getCrop } from "../shared/crops.js";
-import { cropName, formatKsh, formatUnitPrice } from "../shared/format.js";
+import { availabilityLabel, cropName, formatKsh, formatUnitPrice } from "../shared/format.js";
 import { getCropPrices } from "../agriculture/marketService.js";
 import { getFertilizerListings } from "../agriculture/fertilizerService.js";
 import { calculateBudget, FertilizerUnavailableError } from "../agriculture/budgetCalculator.js";
@@ -56,7 +56,7 @@ function mainMenu(locale: Locale): string {
     t(locale, "WELCOME to Farm Expert", "KARIBU Farm Expert"),
     t(locale, "1. Crop prices", "1. Bei za mazao"),
     t(locale, "2. Fertilizer price", "2. Bei ya mbolea"),
-    t(locale, "3. Plan budget", "3. Panga budget"),
+    t(locale, "3. Plan budget", "3. Panga bajeti"),
     t(locale, "4. Change language", "4. Badilisha lugha"),
     t(locale, "5. Exit", "5. Toka")
   ].join("\n");
@@ -81,8 +81,8 @@ function fertTypeMenu(locale: Locale, usualFor?: CropId): string {
   return [t(locale, "Select fertilizer:", "Chagua mbolea:"), ...usual, ...numbered(FERT_TYPES, (f) => f), t(locale, "0. Back", "0. Rudi")].join("\n");
 }
 
-function languageMenu(): string {
-  return ["1. English", "2. Kiswahili", "0. Back"].join("\n");
+function languageMenu(locale: Locale): string {
+  return ["1. English", "2. Kiswahili", t(locale, "0. Back", "0. Rudi")].join("\n");
 }
 
 const farmSizePrompt = (locale: Locale) => t(locale, "Enter farm size in acres:", "Weka ukubwa wa shamba (ekari):");
@@ -113,7 +113,7 @@ export function stepUssdSession(sessionId: string, input: string): UssdStepResul
       if (choice === "1") return go("PRICE_CROP", cropMenu(locale));
       if (choice === "2") return go("FERT_TYPE", fertTypeMenu(locale));
       if (choice === "3") return go("BUDGET_CROP", cropMenu(locale));
-      if (choice === "4") return go("LANGUAGE", languageMenu());
+      if (choice === "4") return go("LANGUAGE", languageMenu(locale));
       if (choice === "5") {
         session.state = "ENDED";
         return { text: goodbye(locale), done: true };
@@ -159,7 +159,7 @@ export function stepUssdSession(sessionId: string, input: string): UssdStepResul
       const county = pick(COUNTIES, choice);
       if (!county) return { text: invalid(locale) + countyMenu(locale), done: false };
       const listings = getFertilizerListings({ type: session.fertilizerType, county: county.value });
-      const lines = listings.map((f) => `${f.supplier}: ${formatKsh(f.pricePerBag)} (${f.availability})`);
+      const lines = listings.map((f) => `${f.supplier}: ${formatKsh(f.pricePerBag)} (${availabilityLabel(f.availability, locale)})`);
       return result([
         t(locale, `${session.fertilizerType} prices - ${county.label}`, `Bei ya ${session.fertilizerType} - ${county.label}`),
         ...(lines.length > 0 ? lines : [t(locale, "No listings found.", "Hakuna taarifa.")]),

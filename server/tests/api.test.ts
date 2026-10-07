@@ -183,6 +183,8 @@ describe("POST /api/chat", () => {
     const res = await request(app).post("/api/chat").send({ message });
     expect(res.status).toBe(200);
     expect(res.body.locale).toBe("sw");
+    expect(res.body.reply).toContain("jumla");
+    expect(res.body.reply).not.toContain("wholesale");
     expect(res.body.data.marketPrices.length).toBeGreaterThan(0);
     expect(res.body.data.fertilizerListings.length).toBeGreaterThan(0);
     expect(res.body.data.budget).toBeDefined();

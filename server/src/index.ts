@@ -2,13 +2,25 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import { createApp } from "./api/app.js";
-import { initSchema, isSeeded } from "./database/connection.js";
+import { dbFilePath, ephemeralDatabaseBlocked, initSchema, isSeeded } from "./database/connection.js";
 import { resetDemoData } from "./database/seed.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Root .env first (shared aliases), then server/.env overrides for this package.
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 dotenv.config({ path: path.resolve(__dirname, "../.env"), override: true });
+
+if (ephemeralDatabaseBlocked(dbFilePath())) {
+  // eslint-disable-next-line no-console
+  console.error(
+    JSON.stringify({
+      level: "error",
+      event: "ephemeral_database_refused",
+      detail: "Production refused to start because the database path is on temporary disk."
+    })
+  );
+  process.exit(1);
+}
 
 initSchema();
 if (!isSeeded()) {

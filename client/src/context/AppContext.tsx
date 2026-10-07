@@ -3,6 +3,7 @@ import type { Channel, CropId, DemoProfile, Locale, SystemStatus } from "../type
 import { getDemoProfile, getStatus, resetDemo as apiResetDemo, syncPendingMessages } from "../api/client";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { LOCAL_DEMO_PROFILE } from "../offline/localData";
+import { clearFarmProfile, loadFarmProfile, saveFarmProfile, type FarmProfile } from "../profile";
 
 export type StatusLabel =
   | "online-hosted"
@@ -30,6 +31,9 @@ interface AppContextValue {
   setCounty: (county: string) => void;
   crop: CropId;
   setCrop: (crop: CropId) => void;
+  profileRevision: number;
+  applyFarmProfile: (profile: FarmProfile) => void;
+  clearSavedFarm: () => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -44,12 +48,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [demoQueryTrigger, setDemoQueryTrigger] = useState(0);
   const [county, setCounty] = useState(LOCAL_DEMO_PROFILE.county);
   const [crop, setCrop] = useState<CropId>(LOCAL_DEMO_PROFILE.crop);
+  const [profileRevision, setProfileRevision] = useState(0);
   const browserOnline = useOnlineStatus();
 
   const refreshStatus = useCallback(async () => {
     const result = await getStatus();
     setStatus(result.data);
     setStatusSource(result.source);
+  }, []);
+
+  useEffect(() => {
+    const saved = loadFarmProfile();
+    if (saved) {
+      setLocale(saved.locale);
+      setCounty(saved.county);
+      setCrop(saved.crop);
+    }
   }, []);
 
   useEffect(() => {
@@ -82,6 +96,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setDemoQueryTrigger((k) => k + 1);
   }, []);
 
+  const applyFarmProfile = useCallback((profile: FarmProfile) => {
+    saveFarmProfile(profile);
+    setLocale(profile.locale);
+    setCounty(profile.county);
+    setCrop(profile.crop);
+    setProfileRevision((n) => n + 1);
+  }, []);
+
+  const clearSavedFarm = useCallback(() => {
+    clearFarmProfile();
+    setCounty(LOCAL_DEMO_PROFILE.county);
+    setCrop(LOCAL_DEMO_PROFILE.crop);
+    setProfileRevision((n) => n + 1);
+  }, []);
+
   const statusLabel: StatusLabel = useMemo(() => {
     if (statusSource === "bundled" && !status?.providers.length) return "waiting-for-connectivity";
     if (statusSource === "cache") return "offline-cached";
@@ -109,7 +138,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     county,
     setCounty,
     crop,
-    setCrop
+    setCrop,
+    profileRevision,
+    applyFarmProfile,
+    clearSavedFarm
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

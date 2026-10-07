@@ -27,6 +27,15 @@ export interface CropInfo {
   defaultFertilizer: FertilizerType;
   budgetDefaults: CropBudgetDefaults;
   budgetNote?: { en: string; sw: string };
+  // Omitted means the bag rate is an illustration. Set "verified" only after the
+  // sign-off in docs/AGRONOMIC_REVIEW.md. Do not set it to make the product look finished.
+  rateStatus?: "illustrative" | "verified";
+}
+
+export type AgronomicRateStatus = "illustrative" | "verified";
+
+export function agronomicRateStatus(crop: CropInfo): AgronomicRateStatus {
+  return crop.rateStatus ?? "illustrative";
 }
 
 // All budget figures are illustrative per-acre estimates for the demo, not

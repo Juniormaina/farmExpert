@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { calculateBudget } from "../api/client";
 import { useAppContext } from "../context/AppContext";
+import { userFacingError } from "../errors";
 import { UI_STRINGS } from "../i18n";
 import { formatKsh } from "../insights";
 import { COUNTIES, CROPS, getCrop } from "../../../server/src/shared/crops";
+import { loadFarmProfile } from "../profile";
 import type { BudgetAssumptions, BudgetResult, CropId, FertilizerType } from "../types";
 
 const FERTILIZER_TYPES: FertilizerType[] = ["DAP", "NPK", "UREA", "CAN"];
@@ -15,9 +17,10 @@ type IncludeKey = "includeSeed" | "includeLabor" | "includeLandPrep";
 export function BudgetCalculatorPanel() {
   const { locale, demoProfile, county, setCounty, crop, setCrop } = useAppContext();
   const t = UI_STRINGS[locale];
+  const savedFarm = loadFarmProfile();
 
-  const [farmSize, setFarmSize] = useState(demoProfile.farmSizeAcres);
-  const [budget, setBudget] = useState(demoProfile.budgetKsh);
+  const [farmSize, setFarmSize] = useState(savedFarm?.farmSizeAcres ?? demoProfile.farmSizeAcres);
+  const [budget, setBudget] = useState(savedFarm?.budgetKsh ?? demoProfile.budgetKsh);
   const [fertilizerType, setFertilizerType] = useState<FertilizerType>(getCrop(crop).defaultFertilizer);
   const [assumptions, setAssumptions] = useState<BudgetAssumptions>(getCrop(crop).budgetDefaults);
   const [assumptionsCrop, setAssumptionsCrop] = useState<CropId>(crop);
@@ -51,13 +54,17 @@ export function BudgetCalculatorPanel() {
         // A slower earlier request must not overwrite the answer to a newer one.
         if (id === requestId.current) setResult(res);
       } catch (err) {
-        if (id === requestId.current) setError(err instanceof Error ? err.message : String(err));
+        if (id === requestId.current) setError(userFacingError(err, t.serviceError));
       } finally {
         if (id === requestId.current) setUpdating(false);
       }
     }, RECALC_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [county, crop, farmSize, budget, fertilizerType, assumptions, locale, inputsValid, t.invalidInput]);
+  }, [county, crop, farmSize, budget, fertilizerType, assumptions, locale, inputsValid, t.invalidInput, t.serviceError]);
+
+  function adjustFarm(delta: number) {
+    setFarmSize((current) => Math.max(0.5, Math.round((current + delta) * 10) / 10));
+  }
 
   function setCost(key: CostKey, value: number) {
     setAssumptions((a) => ({ ...a, [key]: Math.max(0, value) }));
@@ -77,9 +84,14 @@ export function BudgetCalculatorPanel() {
   ];
 
   return (
-    <section className="card">
+    <section className="card" id="budget" tabIndex={-1}>
       <div className="card-heading">
         <h2>{t.budgetTitle}</h2>
+        <p className="basis-line">
+          {t.basedOn
+            .replace("{size}", `${farmSize} ${farmSize === 1 ? t.acre : t.acres}`)
+            .replace("{budget}", formatKsh(budget))}
+        </p>
         {updating && <span className="updating">{t.updating}</span>}
       </div>
 
@@ -108,14 +120,23 @@ export function BudgetCalculatorPanel() {
             </div>
             <div className="form-field">
               <label htmlFor="budget-farm">{t.farmSize}</label>
-              <input
-                id="budget-farm"
-                type="number"
-                min={0.1}
-                step={0.5}
-                value={farmSize}
-                onChange={(e) => setFarmSize(parseFloat(e.target.value) || 0)}
-              />
+              <div className="stepper">
+                <button type="button" className="stepper-btn" onClick={() => adjustFarm(-0.5)} aria-label={t.decreaseSize}>
+                  −
+                </button>
+                <input
+                  id="budget-farm"
+                  type="number"
+                  min={0.1}
+                  step={0.5}
+                  value={farmSize}
+                  onChange={(e) => setFarmSize(parseFloat(e.target.value) || 0)}
+                />
+                <span className="stepper-unit">{farmSize === 1 ? t.acre : t.acres}</span>
+                <button type="button" className="stepper-btn" onClick={() => adjustFarm(0.5)} aria-label={t.increaseSize}>
+                  +
+                </button>
+              </div>
             </div>
             <div className="form-field">
               <label htmlFor="budget-amount">{t.budget}</label>
@@ -174,12 +195,26 @@ export function BudgetCalculatorPanel() {
         </div>
 
         <div className="budget-output">
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          {!data && !error && (
+            <p className="loading-state" role="status">
+              {t.thinking}
+            </p>
+          )}
 
           {data && !error && (
             <div className={`budget-result ${updating ? "stale" : ""}`}>
               <div className={`budget-hero ${data.isShortfall ? "bad" : "good"}`}>
-                <span className="budget-hero-label">{data.isShortfall ? t.shortBy : t.leftOver}</span>
+                <span className="budget-hero-label">
+                  {data.isShortfall
+                    ? t.overPlan.replace("{amount}", formatKsh(Math.abs(data.remainingBudgetKsh)))
+                    : t.withinPlan.replace("{amount}", formatKsh(data.remainingBudgetKsh))}
+                </span>
                 <span className="budget-hero-value">{formatKsh(Math.abs(data.remainingBudgetKsh))}</span>
               </div>
 
@@ -194,37 +229,39 @@ export function BudgetCalculatorPanel() {
 
               {getCrop(data.input.crop).budgetNote && <p className="budget-note">{getCrop(data.input.crop).budgetNote![locale]}</p>}
 
-              {data.lineItems.map((item) => {
-                const share = data.totalEstimatedCostKsh > 0 ? (item.amountKsh / data.totalEstimatedCostKsh) * 100 : 0;
-                const isBiggest = item === biggest && data.lineItems.length > 1;
-                return (
-                  <div className={`line-item ${isBiggest ? "biggest" : ""}`} key={item.label}>
-                    <div className="line-item-top">
-                      <span className="line-item-label">
-                        {item.label}
-                        {isBiggest && <span className="tile-flag inline">{t.biggestCost}</span>}
-                      </span>
-                      <span className="line-item-amount">{formatKsh(item.amountKsh)}</span>
-                    </div>
-                    <div className="line-item-bar">
-                      <div style={{ width: `${share}%` }} />
-                    </div>
-                    <small className="line-item-detail">{item.detail}</small>
-                  </div>
-                );
-              })}
-
-              <div className="budget-total">
-                <span>{t.total}</span>
-                <span>{formatKsh(data.totalEstimatedCostKsh)}</span>
-              </div>
+              <table className="budget-table">
+                <caption className="sr-only">{t.budgetTableCaption}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{t.itemColumn}</th>
+                    <th scope="col">{t.costColumn}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.lineItems.map((item) => {
+                    const isBiggest = item === biggest && data.lineItems.length > 1;
+                    return (
+                      <tr key={item.label}>
+                        <th scope="row">
+                          {item.label}
+                          {isBiggest && <span className="tile-flag inline">{t.biggestCost}</span>}
+                          <span className="line-item-detail">{item.detail}</span>
+                        </th>
+                        <td>{formatKsh(item.amountKsh)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th scope="row">{t.total}</th>
+                    <td>{formatKsh(data.totalEstimatedCostKsh)}</td>
+                  </tr>
+                </tfoot>
+              </table>
 
               <p className="demo-notice">{data.disclaimer}</p>
-              <p className="source-tag">
-                {result.source === "live"
-                  ? locale === "sw" ? "Ilikokotolewa na seva" : "Calculated by server"
-                  : locale === "sw" ? "Ilikokotolewa kwenye kifaa, bila mtandao" : "Calculated on this device, offline"}
-              </p>
+              <p className="source-tag">{result.source === "live" ? t.calculatedHere : t.calculatedOffline}</p>
             </div>
           )}
         </div>

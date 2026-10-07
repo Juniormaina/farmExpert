@@ -221,6 +221,18 @@ export async function resetDemo(): Promise<boolean> {
   }
 }
 
+export async function sendFeedback(input: {
+  rating: "helpful" | "not_helpful";
+  comment?: string;
+  context?: string;
+}): Promise<void> {
+  await fetchJson("/api/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
 export async function syncPendingMessages(): Promise<number> {
   const pending = getPendingMessages();
   let synced = 0;

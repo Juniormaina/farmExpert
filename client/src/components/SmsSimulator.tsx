@@ -31,7 +31,7 @@ export function SmsSimulator() {
     setSending(true);
     setHistory((prev) => [...prev, { sessionId, from: "farmer", text, timestamp: new Date().toISOString() }]);
     try {
-      const result = await sendSms(sessionId, text);
+      const result = await sendSms(sessionId, text, locale);
       if (result.data.history.length > 0) {
         setHistory(result.data.history);
       } else {
@@ -65,10 +65,8 @@ export function SmsSimulator() {
             {history.length === 0 && !sending ? (
               <div className="phone-empty">
                 <p>{t.smsEmpty}</p>
-                {suggestionsFor(undefined, crop, county, demoProfile.budgetKsh, locale)
-                  .slice(0, 1)
-                  .map((example) => (
-                    <button key={example} className="chip" onClick={() => send(example)}>
+                {suggestionsFor(undefined, crop, county, demoProfile.budgetKsh, locale).map((example) => (
+                    <button key={example} type="button" className="chip" onClick={() => send(example)}>
                       {example}
                     </button>
                   ))}
