@@ -1,10 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
-import type { RequestHandler } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 
 export const MAX_MESSAGE_CHARS = 800;
 
 export function securityHeaders(): RequestHandler {
-  return (_req, res, next) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("Referrer-Policy", "no-referrer");
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -43,7 +43,7 @@ export function takeToken(
 const writeStore = new Map<string, RateBucket>();
 
 export function limitWrites(max = 80, windowMs = 60_000): RequestHandler {
-  return (req, res, next) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const key = req.ip || req.socket.remoteAddress || "unknown";
     if (!takeToken(writeStore, key, max, windowMs, Date.now())) {
       res.setHeader("Retry-After", "60");
@@ -69,7 +69,7 @@ export function demoResetAllowed(provided: string | undefined, env: NodeJS.Proce
 }
 
 export function providerGate(envName: "SMS_WEBHOOK_TOKEN" | "USSD_WEBHOOK_TOKEN"): RequestHandler {
-  return (req, res, next) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const expected = process.env[envName];
     if (!expected) {
       return res.status(503).json({
